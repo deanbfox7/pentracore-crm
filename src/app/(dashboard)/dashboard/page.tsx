@@ -1,11 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { Users, TrendingUp, Mail, Calendar, DollarSign, Target } from 'lucide-react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { stageColor, formatDateTime, STAGES } from '@/lib/utils'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const [leadsResult, appointmentsResult, campaignsResult] = await Promise.all([
     supabase.from('leads').select('id, stage, lead_score, estimated_deal_value, created_at').eq('owner_id', user!.id),

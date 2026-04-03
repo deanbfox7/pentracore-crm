@@ -19,37 +19,44 @@ export default function LeadForm({ lead }: Props) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const form = new FormData(e.currentTarget)
-    const data = {
-      first_name: form.get('first_name') as string,
-      last_name: form.get('last_name') as string,
-      email: form.get('email') as string || null,
-      phone: form.get('phone') as string || null,
-      linkedin_url: form.get('linkedin_url') as string || null,
-      company_name: form.get('company_name') as string,
-      company_website: form.get('company_website') as string || null,
-      industry: form.get('industry') as string || null,
-      company_size: form.get('company_size') as string || null,
-      country: form.get('country') as string,
-      city: form.get('city') as string || null,
-      commodities_of_interest: commodities,
-      estimated_volume: form.get('estimated_volume') as string || null,
-      stage: form.get('stage') as string,
-      notes: form.get('notes') as string || null,
-      estimated_deal_value: Number(form.get('estimated_deal_value')) || null,
-      source: lead ? undefined : 'manual',
-    }
+    try {
+      const form = new FormData(e.currentTarget)
+      const data = {
+        first_name: form.get('first_name') as string,
+        last_name: form.get('last_name') as string,
+        email: form.get('email') as string || null,
+        phone: form.get('phone') as string || null,
+        linkedin_url: form.get('linkedin_url') as string || null,
+        company_name: form.get('company_name') as string,
+        company_website: form.get('company_website') as string || null,
+        industry: form.get('industry') as string || null,
+        company_size: form.get('company_size') as string || null,
+        country: form.get('country') as string,
+        city: form.get('city') as string || null,
+        commodities_of_interest: commodities,
+        estimated_volume: form.get('estimated_volume') as string || null,
+        stage: form.get('stage') as string,
+        notes: form.get('notes') as string || null,
+        estimated_deal_value: Number(form.get('estimated_deal_value')) || null,
+        source: lead ? undefined : 'manual',
+      }
 
-    let result
-    if (lead) {
-      result = await supabase.from('leads').update(data).eq('id', lead.id).select().single()
-    } else {
-      const { data: { user } } = await supabase.auth.getUser()
-      result = await supabase.from('leads').insert({ ...data, owner_id: user!.id }).select().single()
-    }
+      let result
+      if (lead) {
+        result = await supabase.from('leads').update(data).eq('id', lead.id).select().single()
+      } else {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { router.push('/login'); return }
+        result = await supabase.from('leads').insert({ ...data, owner_id: user.id }).select().single()
+      }
 
-    if (result.error) { setError(result.error.message); setLoading(false) }
-    else router.push(`/leads/${result.data.id}`)
+      if (result.error) setError(result.error.message)
+      else router.push(`/leads/${result.data.id}`)
+    } catch (err: any) {
+      setError(err?.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const field = (label: string, name: string, type = 'text', placeholder = '', required = false) => (

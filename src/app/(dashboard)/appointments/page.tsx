@@ -1,9 +1,11 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppointmentsClient from './AppointmentsClient'
 
 export default async function AppointmentsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const [appointmentsResult, leadsResult] = await Promise.all([
     supabase.from('appointments').select('*, lead:leads(first_name, last_name, company_name, email, phone)').eq('owner_id', user!.id).order('start_time'),

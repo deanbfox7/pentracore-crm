@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import LeadsClient from './LeadsClient'
 
@@ -9,6 +10,7 @@ export default async function LeadsPage({
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   let query = supabase
     .from('leads')

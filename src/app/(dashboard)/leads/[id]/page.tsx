@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import LeadDetailClient from './LeadDetailClient'
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const [leadResult, activitiesResult] = await Promise.all([
     supabase.from('leads').select('*').eq('id', id).eq('owner_id', user!.id).single(),
