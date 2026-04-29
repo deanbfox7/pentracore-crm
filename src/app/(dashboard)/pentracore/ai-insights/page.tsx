@@ -3,10 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 import { ShieldCheck, AlertTriangle, Sparkles, Target, Clock } from 'lucide-react'
 
-function pick<T>(arr: T[], n: number) {
-  return arr.slice(0, n)
-}
-
 export default async function AiInsightsPage() {
   const supabase = await createClient()
   const { data: userData } = await supabase.auth.getUser()
@@ -25,8 +21,29 @@ export default async function AiInsightsPage() {
       .eq('status', 'open'),
   ])
 
-  const dealRows: any[] = deals || []
-  const taskRows: any[] = tasks || []
+  type DealRow = {
+    deal_code: string
+    stage_index: number
+    stage: string
+    commodity: string
+    probability: number | null
+    blocker: string | null
+    next_action: string | null
+    estimated_gmv: number | null
+    estimated_commission: number | null
+  }
+
+  type TaskRow = {
+    id: string
+    title: string
+    due_at: string | null
+    priority: string
+    status: string
+    deal?: { deal_code?: string } | null
+  }
+
+  const dealRows = (deals || []) as unknown as DealRow[]
+  const taskRows = (tasks || []) as unknown as TaskRow[]
 
   // Heuristic "AI" insights (works even without an LLM key).
   const bestDeals = [...dealRows].sort((a, b) => (b.probability || 0) - (a.probability || 0)).slice(0, 5)
