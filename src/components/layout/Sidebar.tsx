@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, GitBranch, Mail, Calendar,
-  BarChart3, Settings, LogOut, FileText, MessageSquare
+  BarChart3, Settings, LogOut, FileText, Building2, Handshake, ClipboardList, Truck, Sparkles, Upload
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -13,10 +13,23 @@ const nav = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/leads', icon: Users, label: 'Leads' },
   { href: '/pipeline', icon: GitBranch, label: 'Pipeline' },
+  { href: '/accounts', icon: Building2, label: 'Accounts' },
+  { href: '/opportunities', icon: Handshake, label: 'Opportunities' },
+  { href: '/workflow', icon: ClipboardList, label: 'Workflow' },
   { href: '/campaigns', icon: Mail, label: 'Campaigns' },
   { href: '/appointments', icon: Calendar, label: 'Appointments' },
   { href: '/templates', icon: FileText, label: 'Templates' },
+  { href: '/reports', icon: BarChart3, label: 'Reports' },
   { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+
+  // PentraCore modules
+  { href: '/pentracore/executive', icon: LayoutDashboard, label: 'Deal Intelligence' },
+  { href: '/pentracore/deals/pipeline', icon: GitBranch, label: 'Deal Pipeline' },
+  { href: '/pentracore/commodities', icon: BarChart3, label: 'Commodities' },
+  { href: '/pentracore/logistics', icon: Truck, label: 'Logistics' },
+  { href: '/pentracore/ai-insights', icon: Sparkles, label: 'AI Insights' },
+  { href: '/pentracore/documents', icon: FileText, label: 'Document Center' },
+  { href: '/pentracore/import', icon: Upload, label: 'Import Master Data' },
 ]
 
 export default function Sidebar() {
