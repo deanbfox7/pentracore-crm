@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AlertTriangle, Building2, Users, Briefcase, Truck, ShieldCheck } from 'lucide-react'
+import type { ComponentType } from 'react'
 
 type Deal = {
   id: string
@@ -41,9 +42,11 @@ type Props = {
   deals: Deal[]
   participants: ParticipantRow[]
   tasks: TaskRow[]
+  nowMs: number
 }
 
-const TABS: { id: string; label: string; icon: any; allowed: (role: string) => boolean }[] = [
+type IconProps = { size?: number; className?: string }
+const TABS: { id: string; label: string; icon: ComponentType<IconProps>; allowed: (role: string) => boolean }[] = [
   { id: 'executives', label: 'Executives', icon: ShieldCheck, allowed: () => true },
   { id: 'investors', label: 'Investors', icon: Briefcase, allowed: (r) => r === 'admin' || r === 'sales_manager' },
   { id: 'buyers', label: 'Buyers', icon: Users, allowed: (r) => r === 'admin' || r === 'sales_manager' },
@@ -51,26 +54,21 @@ const TABS: { id: string; label: string; icon: any; allowed: (role: string) => b
   { id: 'operators', label: 'Operators', icon: Truck, allowed: (r) => r === 'admin' || r === 'sales_manager' || r === 'sales_rep' || r === 'viewer' },
 ]
 
-export default function StakeholderPortalClient({ profileRole, deals, participants, tasks }: Props) {
-  const [tab, setTab] = useState<string>(() => (profileRole === 'admin' ? 'executives' : 'operators'))
+export default function StakeholderPortalClient({ profileRole, deals, participants, tasks, nowMs }: Props) {
+  const [tab, setTab] = useState<string>(() => (
+    profileRole === 'admin' || profileRole === 'sales_manager' ? 'executives' : 'operators'
+  ))
 
   const visibleTabs = useMemo(() => TABS.filter(t => t.allowed(profileRole)), [profileRole])
 
-  // If current tab becomes invisible, reset.
-  useEffect(() => {
-    if (!visibleTabs.some(t => t.id === tab)) {
-      setTab(visibleTabs[0]?.id || 'operators')
-    }
-  }, [tab, visibleTabs])
-
   const urgentTasks = useMemo(() => {
-    const now = Date.now()
+    const now = nowMs
     const week = 7 * 24 * 60 * 60 * 1000
     return tasks
       .filter(t => t.status === 'open')
       .filter(t => t.due_at ? new Date(t.due_at).getTime() <= now + week : false)
       .slice(0, 10)
-  }, [tasks])
+  }, [tasks, nowMs])
 
   const tabDeals = useMemo(() => {
     if (tab === 'executives') return deals.slice(0, 10)

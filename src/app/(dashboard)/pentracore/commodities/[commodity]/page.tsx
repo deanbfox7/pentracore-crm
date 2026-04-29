@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
@@ -103,8 +104,12 @@ export default async function CommodityDetailPage({ params }: { params: { commod
                     <div className="text-slate-400 text-xs mt-2 line-clamp-2">{d.next_action || d.blocker || ''}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-yellow-200 text-sm font-semibold">{d.probability != null ? `${Math.round(d.probability)}%` : '—'}</div>
-                    <div className="text-slate-500 text-xs mt-1">{d.volume != null ? `${d.volume} MT` : ''}</div>
+                    <div className="text-yellow-200 text-sm font-semibold">
+                      {d.probability != null ? Math.round(d.probability) + '%' : '—'}
+                    </div>
+                    <div className="text-slate-500 text-xs mt-1">
+                      {d.volume != null ? String(d.volume) + ' MT' : ''}
+                    </div>
                   </div>
                 </div>
               ))}
