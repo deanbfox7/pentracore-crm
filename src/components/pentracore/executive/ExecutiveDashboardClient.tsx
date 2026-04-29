@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts'
 import { BarChart3, MapPin, AlertTriangle, ShieldCheck, DollarSign, TrendingUp } from 'lucide-react'
+import type { CSSProperties } from 'react'
 
 type Deal = {
   deal_code: string
@@ -44,6 +45,7 @@ type Props = {
   deals: Deal[]
   tasks: DealTask[]
   investorRows: InvestorRow[]
+  nowMs: number
 }
 
 const STAGES: { id: number; label: string }[] = [
@@ -77,7 +79,7 @@ function hashTo01(s: string) {
   return (h >>> 0) / 2 ** 32
 }
 
-export default function ExecutiveDashboardClient({ deals, tasks, investorRows }: Props) {
+export default function ExecutiveDashboardClient({ deals, tasks, investorRows, nowMs }: Props) {
   const [selectedCommodity, setSelectedCommodity] = useState<string>('All')
 
   const filteredDeals = useMemo(() => {
@@ -121,7 +123,7 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
   }, [filteredDeals])
 
   const urgentTasks = useMemo(() => {
-    const now = Date.now()
+    const now = nowMs
     const week = 7 * 24 * 60 * 60 * 1000
     return tasks
       .filter(t => t.status === 'open')
@@ -132,14 +134,6 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
   const bestDeals = useMemo(() => {
     return [...filteredDeals]
       .sort((a, b) => (b.probability || 0) - (a.probability || 0))
-      .slice(0, 6)
-  }, [filteredDeals])
-
-  const highRiskDeals = useMemo(() => {
-    // Heuristic: low probability OR has a blocker
-    return [...filteredDeals]
-      .filter(d => (d.probability || 0) < 40 || Boolean(d.blocker))
-      .sort((a, b) => (a.probability || 0) - (b.probability || 0))
       .slice(0, 6)
   }, [filteredDeals])
 
@@ -170,7 +164,7 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
     return unique
   }, [investorRows])
 
-  const execTooltipStyle = { backgroundColor: '#0b1220', border: '1px solid #1e293b', borderRadius: 8 }
+  const execTooltipStyle: CSSProperties = { backgroundColor: '#0b1220', border: '1px solid #1e293b', borderRadius: 8 }
 
   const mapPoints = useMemo(() => {
     return filteredDeals.slice(0, 60).map(d => {
@@ -189,10 +183,11 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
     })
   }, [filteredDeals])
 
-  const stageTooltip = (props: any) => {
-    const payload = props?.payload || {}
+  const stageTooltip = (props: unknown) => {
+    const p = props as { payload?: { stage?: string; count?: number }[] } | null
+    const payload = (p?.payload?.[0] || {}) as { stage?: string; count?: number }
     return (
-      <div style={execTooltipStyle as any} className="p-2 text-xs text-slate-200">
+      <div style={execTooltipStyle} className="p-2 text-xs text-slate-200">
         <div className="font-medium text-white">{payload.stage}</div>
         <div className="text-slate-400">{payload.count} deals</div>
       </div>
@@ -319,7 +314,7 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={execTooltipStyle as any} />
+                <Tooltip contentStyle={execTooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -434,15 +429,16 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows }:
               <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip
-                contentStyle={execTooltipStyle as any}
+                contentStyle={execTooltipStyle}
                 cursor={{ stroke: '#eab308', strokeWidth: 1, fill: 'rgba(234,179,8,0.05)' }}
                 formatter={() => null}
                 labelFormatter={() => null}
-                content={(props: any) => {
-                  const p = props?.payload?.[0]
+                content={(props: unknown) => {
+                  const pl = props as { payload?: unknown[] } | null
+                  const p = pl?.payload?.[0] as { label?: string; region?: string; commodity?: string; stage_index?: number } | undefined
                   if (!p) return null
                   return (
-                    <div style={execTooltipStyle as any} className="p-2 text-xs text-slate-200">
+                    <div style={execTooltipStyle} className="p-2 text-xs text-slate-200">
                       <div className="text-white font-medium">{p.label}</div>
                       <div className="text-slate-400">{p.region}</div>
                       <div className="text-slate-400">{p.commodity}</div>

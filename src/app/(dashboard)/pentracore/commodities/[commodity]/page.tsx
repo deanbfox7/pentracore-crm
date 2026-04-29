@@ -76,7 +76,9 @@ export default async function CommodityDetailPage({ params }: { params: { commod
         <div className="text-right text-sm">
           <div className="text-slate-500">Market price (ZAR/MT)</div>
           <div className="text-white font-semibold mt-1">
-            {marketPrice != null ? `ZAR ${Number(marketPrice).toLocaleString()}` : '—'}
+            {marketPrice != null
+              ? 'ZAR ' + Number(marketPrice).toLocaleString()
+              : '—'}
           </div>
           {bestPriceRow?.as_of_date && (
             <div className="text-slate-500 text-xs mt-1">
