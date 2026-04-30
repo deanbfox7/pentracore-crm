@@ -28,14 +28,14 @@ export default async function CommodityDetailPage({ params }: { params: { commod
     .from('deals')
     .select('id, deal_code, stage_index, stage, commodity, grade_spec, volume, price_zar_per_mt, estimated_gmv, estimated_commission, probability, side, next_action, blocker')
     .eq('owner_id', user.id)
-    .ilike('commodity', `%${commodityLabel}%`)
+    .ilike('commodity', '%' + commodityLabel + '%')
     .order('stage_index', { ascending: true })
 
   const { data: pricebookRows } = await supabase
     .from('pricebook')
     .select('id, grade, basis, price_zar_per_mt, pay_instrument, as_of_date, source')
     .eq('owner_id', user.id)
-    .ilike('commodity', `%${commodityLabel}%')
+    .ilike('commodity', '%' + commodityLabel + '%')
     .order('as_of_date', { ascending: false })
     .limit(6)
 

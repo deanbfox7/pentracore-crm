@@ -129,7 +129,7 @@ export default function ExecutiveDashboardClient({ deals, tasks, investorRows, n
       .filter(t => t.status === 'open')
       .filter(t => t.due_at ? (new Date(t.due_at).getTime() <= now + week) : true)
       .slice(0, 8)
-  }, [tasks])
+  }, [tasks, nowMs])
 
   const bestDeals = useMemo(() => {
     return [...filteredDeals]
