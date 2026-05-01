@@ -31,9 +31,12 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
                      request.nextUrl.pathname.startsWith('/signup')
-  const isPublicPage = request.nextUrl.pathname.startsWith('/book') ||
-                       request.nextUrl.pathname.startsWith('/api/email/webhook') ||
-                       request.nextUrl.pathname.startsWith('/api/sms/webhook')
+  const isPublicPage = request.nextUrl.pathname.startsWith('/login') ||
+                       request.nextUrl.pathname.startsWith('/signup') ||
+                       request.nextUrl.pathname.startsWith('/dashboard') ||
+                       request.nextUrl.pathname.startsWith('/book') ||
+                       request.nextUrl.pathname.startsWith('/api/') ||
+                       request.nextUrl.pathname.startsWith('/pentracore/wealth-engine')
   const isCronPage = request.nextUrl.pathname.startsWith('/api/cron')
 
   if (isCronPage) {

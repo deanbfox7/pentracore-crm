@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DealKanbanBoard from '@/components/pentracore/deals/DealKanbanBoard'

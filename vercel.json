@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/score-new-leads",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/notify-overdue-tasks",
+      "schedule": "30 * * * *"
     }
   ]
 }

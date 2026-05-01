@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pentracore CRM (Commodities)
 
-## Getting Started
+Pentracore CRM is a commodities-focused sales platform for lead tracking, pipeline management, RFQ-to-contract workflow, and reporting.
 
-First, run the development server:
+## Core Modules
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Leads and pipeline board (qualification through close)
+- Accounts and contacts for buyers/suppliers/brokers
+- Opportunities with commodity-specific deal metadata
+- RFQ, quote, and contract workflow
+- Tasks with overdue reminder checks
+- Dashboard and reporting endpoints
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js (App Router) + TypeScript
+- Supabase (Auth, Postgres, RLS)
+- Tailwind CSS
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+1. Install dependencies:
+   - `npm install`
+2. Configure environment variables in `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `CRON_SECRET`
+3. Apply SQL migrations in Supabase in order:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_crm_mvp_expansion.sql`
+   - `supabase/migrations/003_pentracore_deal_intelligence.sql`
+   - `supabase/migrations/004_pentracore_wealth_engine.sql`
+4. Run locally:
+   - `npm run dev`
 
-To learn more about Next.js, take a look at the following resources:
+## Scheduled Jobs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/api/cron/process-sequences` (every 5 minutes)
+- `/api/cron/send-reminders` (hourly)
+- `/api/cron/score-new-leads` (daily)
+- `/api/cron/notify-overdue-tasks` (hourly)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security and Ops
 
-## Deploy on Vercel
+- RLS policies enforce per-owner data access.
+- Profile roles supported: `admin`, `sales_manager`, `sales_rep`, `viewer`.
+- Audit logs are written for lead/opportunity/RFQ/quote/contract/task events.
+- Recommended backups: daily managed Postgres snapshot + weekly export.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## PentraCore Wealth Engine
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/pentracore/import` imports `MASTER_DEAL_TRACKER.csv` and `MASTER_COUNTERPARTIES.csv`.
+- `/pentracore/wealth-engine` gives the team a plain-English daily action queue.
+- Wealth-engine database views:
+  - `v_pentracore_deal_processing`
+  - `v_pentracore_daily_actions`
+  - `v_pentracore_supply_demand_match`

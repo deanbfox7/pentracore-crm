@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, GitBranch, Mail, Calendar,
-  BarChart3, Settings, LogOut, FileText, Building2, Handshake, ClipboardList, Truck, Sparkles, Upload
+  BarChart3, Settings, LogOut, FileText, Building2, Handshake, ClipboardList, Truck, Sparkles, Upload, Database
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +24,7 @@ const nav = [
 
   // PentraCore modules
   { href: '/pentracore/executive', icon: LayoutDashboard, label: 'Deal Intelligence' },
+  { href: '/pentracore/wealth-engine', icon: Database, label: 'Wealth Engine' },
   { href: '/pentracore/deals/pipeline', icon: GitBranch, label: 'Deal Pipeline' },
   { href: '/pentracore/commodities', icon: BarChart3, label: 'Commodities' },
   { href: '/pentracore/logistics', icon: Truck, label: 'Logistics' },

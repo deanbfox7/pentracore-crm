@@ -154,7 +154,10 @@ export async function POST(req: Request) {
 
       if (dealErr || !dealRows) continue
 
-      const participantRole = deriveParticipantRole(counterpartyName, dealRows.side as any)
+      const participantRole = deriveParticipantRole(
+        counterpartyName,
+        dealRows.side === 'buy' || dealRows.side === 'sell' ? dealRows.side : 'match'
+      )
 
       // Find/create company
       const companyName = counterpartyName.split('(')[0].trim() || counterpartyName

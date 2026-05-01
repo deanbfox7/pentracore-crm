@@ -17,13 +17,13 @@ const STAGE_BY_INDEX: Record<number, string> = {
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const dealId = params.id
+  const { id: dealId } = await params
   const body = await req.json()
   const newStageIndex = Number(body?.newStageIndex)
   if (!Number.isFinite(newStageIndex) || newStageIndex < 1 || newStageIndex > 11) {

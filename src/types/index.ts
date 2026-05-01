@@ -139,3 +139,135 @@ export interface Profile {
   created_at: string
   updated_at: string
 }
+
+export interface Shareholder {
+  id: string
+  name: string
+  email: string
+  role: string
+  portfolio_deal_ids: string[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CrmLead {
+  id: string
+  commodity_type: string
+  volume: string
+  country_of_origin: string
+  role: 'buyer' | 'seller'
+  contact_info: string
+  conversation_history: Record<string, unknown>[]
+  source: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export type CompanyType = 'buyer' | 'supplier' | 'broker'
+
+export interface Company {
+  id: string
+  owner_id: string
+  name: string
+  type: CompanyType
+  website?: string
+  country?: string
+  region?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Contact {
+  id: string
+  owner_id: string
+  company_id?: string
+  first_name: string
+  last_name: string
+  email?: string
+  phone?: string
+  title?: string
+  influence_level?: 'low' | 'medium' | 'high'
+  created_at: string
+  updated_at: string
+}
+
+export type OpportunityStage = 'qualified' | 'rfq' | 'negotiation' | 'contract' | 'closed_won' | 'closed_lost'
+
+export interface Opportunity {
+  id: string
+  owner_id: string
+  lead_id?: string
+  company_id?: string
+  primary_contact_id?: string
+  title: string
+  stage: OpportunityStage
+  commodity: string
+  incoterm?: string
+  quantity?: number
+  unit?: string
+  target_price?: number
+  estimated_margin?: number
+  expected_close_date?: string
+  status: 'open' | 'won' | 'lost'
+  notes?: string
+  closed_reason?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface RFQ {
+  id: string
+  owner_id: string
+  opportunity_id: string
+  buyer_requirements: string
+  specification?: Record<string, unknown>
+  deadline_date?: string
+  status: 'draft' | 'sent' | 'closed'
+  created_at: string
+  updated_at: string
+}
+
+export interface Quote {
+  id: string
+  owner_id: string
+  rfq_id: string
+  price: number
+  currency: string
+  terms?: string
+  valid_until?: string
+  status: 'sent' | 'accepted' | 'rejected' | 'expired'
+  created_at: string
+  updated_at: string
+}
+
+export interface SalesContract {
+  id: string
+  owner_id: string
+  opportunity_id: string
+  quote_id?: string
+  counterparty: string
+  value: number
+  currency: string
+  lifecycle_status: 'draft' | 'review' | 'signed' | 'cancelled'
+  signed_at?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Task {
+  id: string
+  owner_id: string
+  lead_id?: string
+  opportunity_id?: string
+  title: string
+  description?: string
+  status: 'pending' | 'in_progress' | 'done'
+  priority: 'low' | 'medium' | 'high'
+  due_date?: string
+  completed_at?: string
+  created_at: string
+  updated_at: string
+}

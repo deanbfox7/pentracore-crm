@@ -138,7 +138,7 @@ ${JSON.stringify(dealRows.map(d => ({
   blocker: d.blocker,
   next_action: d.next_action,
   estimated_commission: d.estimated_commission,
-}), null, 0)).slice(0, 6000)}
+}))).slice(0, 6000)}
 
 Open tasks:
 ${JSON.stringify(taskRows.map(t => ({
@@ -146,7 +146,7 @@ ${JSON.stringify(taskRows.map(t => ({
   deal: t.deal?.deal_code || null,
   due_at: t.due_at,
   priority: t.priority
-})), null, 0).slice(0, 4000)}
+}))).slice(0, 4000)}
 `
 
       const response = await openai.chat.completions.create({
