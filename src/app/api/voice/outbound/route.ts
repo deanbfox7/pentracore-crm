@@ -3,16 +3,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { createCachedChatCompletion } from '@/lib/ai/claude'
 import { initiateOutboundCall } from '@/lib/services/twilio'
 
-const FOLLOWUP_PROMPT = `You are Dean Fox calling ${name} about their ${commodity} opportunity. Be warm, professional, direct. This is a follow-up to their inbound lead.
-
-Current info:
-- Commodity: ${commodity}
-- Volume: ${volume}
-- Origin: ${origin}
-- Role: ${role}
-
-Objective: Confirm interest, answer initial questions, schedule next step (video call or email docs). Keep it under 2 min call length.`
-
 export async function POST(req: Request) {
   try {
     const { lead_id } = (await req.json()) as { lead_id: string }
@@ -36,15 +26,19 @@ export async function POST(req: Request) {
 
     // Generate call script
     const callScript = await createCachedChatCompletion({
-      system: FOLLOWUP_PROMPT.replace('${name}', lead.contact_info || 'there')
-        .replace('${commodity}', lead.commodity_type || 'mineral')
-        .replace('${volume}', lead.volume || 'TBD')
-        .replace('${origin}', lead.country_of_origin || 'TBD')
-        .replace('${role}', lead.role || 'buyer'),
+      system: `You are Dean Fox calling ${lead.contact_info || 'there'} about their ${lead.commodity_type || 'mineral'} opportunity. Be warm, professional, direct. This is a follow-up to their inbound lead.
+
+Current info:
+- Commodity: ${lead.commodity_type || 'mineral'}
+- Volume: ${lead.volume || 'TBD'}
+- Origin: ${lead.country_of_origin || 'TBD'}
+- Role: ${lead.role || 'buyer'}
+
+Objective: Confirm interest, answer initial questions, schedule next step (video call or email docs). Keep it under 2 min call length.`,
       messages: [
         {
           role: 'user',
-          content: `Generate a 2-minute call opening script for Dean to follow up on this lead.`,
+          content: 'Generate a 2-minute call opening script for Dean to follow up on this lead.',
         },
       ],
       maxTokens: 250,
