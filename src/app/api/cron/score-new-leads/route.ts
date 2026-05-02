@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  if (!process.env.OPENAI_API_KEY) return null
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 export async function GET() {
   const supabase = await createServiceClient()
@@ -22,6 +25,8 @@ export async function GET() {
 Company: ${lead.company_name}, Industry: ${lead.industry || 'Unknown'}, Country: ${lead.country}, Size: ${lead.company_size || 'Unknown'}, Commodities: ${(lead.commodities_of_interest || []).join(', ') || 'None specified'}
 Return JSON: {"score": <0-100>, "reasoning": "<1-2 sentences>"}`
 
+      const openai = getOpenAI()
+      if (!openai) continue
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],

@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  if (!process.env.OPENAI_API_KEY) return null
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -37,6 +40,8 @@ Rules:
 - Do NOT invent facts about their company
 - Return JSON: {"subject": "...", "body": "..."}`
 
+  const openai = getOpenAI()
+  if (!openai) return NextResponse.json({ error: 'OpenAI not configured' }, { status: 500 })
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
