@@ -6,7 +6,7 @@ export default function SettingsPage() {
 
       <div className="space-y-4">
         {[
-          { title: 'SendGrid (Email)', desc: 'Set SENDGRID_API_KEY, SENDGRID_FROM_EMAIL in your Vercel environment variables', status: 'Configure in Vercel', color: 'text-yellow-400' },
+          { title: 'Resend (Email)', desc: 'Set RESEND_API_KEY, RESEND_FROM_EMAIL in your Vercel environment variables', status: 'Configure in Vercel', color: 'text-yellow-400' },
           { title: 'Twilio (SMS)', desc: 'Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in Vercel', status: 'Configure in Vercel', color: 'text-yellow-400' },
           { title: 'OpenAI (AI Scoring & Personalization)', desc: 'Set OPENAI_API_KEY in your Vercel environment variables', status: 'Configure in Vercel', color: 'text-yellow-400' },
           { title: 'Supabase (Database)', desc: 'Set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY', status: 'Configure in Vercel', color: 'text-yellow-400' },

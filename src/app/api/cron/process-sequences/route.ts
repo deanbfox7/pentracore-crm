@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import sgMail from '@sendgrid/mail'
+import { sendEmail } from '@/lib/services/sendgrid'
 import Twilio from 'twilio'
 import OpenAI from 'openai'
 
@@ -64,12 +64,11 @@ export async function GET() {
 
     try {
       if (step.channel === 'email' && lead.email) {
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
-        await sgMail.send({
+        await sendEmail({
           to: lead.email,
-          from: { email: process.env.SENDGRID_FROM_EMAIL!, name: process.env.SENDGRID_FROM_NAME || 'Pentracore International' },
-          subject, html: body.replace(/\n/g, '<br/>'), text: body,
-          customArgs: { lead_id: lead.id },
+          subject,
+          html: body.replace(/\n/g, '<br/>'),
+          text: body,
         })
         await supabase.from('activities').insert({ lead_id: lead.id, type: 'email_sent', subject, body: body.substring(0, 500), metadata: { campaign_id: enrollment.campaign_id, step_order: step.step_order } })
       } else if (step.channel === 'sms' && lead.phone) {
