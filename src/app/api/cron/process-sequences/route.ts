@@ -4,7 +4,10 @@ import { sendEmail } from '@/lib/services/sendgrid'
 import Twilio from 'twilio'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  if (!process.env.OPENAI_API_KEY) return null
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 function interpolate(template: string, lead: Record<string, any>): string {
   return template
@@ -51,6 +54,8 @@ export async function GET() {
 
     if (step.use_ai_personalization && lead.email) {
       try {
+        const openai = getOpenAI()
+        if (!openai) continue
         const resp = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: `Personalize this sales email for ${lead.first_name} at ${lead.company_name} (${lead.industry}, ${lead.country}). Keep same structure, under 150 words.\n\nSubject: ${subject}\n\nBody: ${body}\n\nReturn JSON: {"subject": "...", "body": "..."}` }],
