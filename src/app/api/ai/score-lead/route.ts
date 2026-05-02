@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY not configured')
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -37,6 +42,7 @@ Scoring criteria (weight each):
 Return ONLY valid JSON: {"score": <number 0-100>, "reasoning": "<2-3 sentence explanation>"}`
 
   try {
+    const openai = getOpenAI()
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
