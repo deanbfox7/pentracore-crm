@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env*
+!.env.local.example
+.DS_Store
+.claude/
+.codex/
+.gemini/
+.antigravity/
+*.log
+Screenshots/
+*.png
+*.zip
+backup-old-home-git-ignore/

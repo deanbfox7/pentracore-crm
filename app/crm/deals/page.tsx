@@ -1,0 +1,373 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
+import { supabase } from '@/lib/supabase'
+
+interface Deal {
+  id: number
+  opportunity_id: number
+  buyer_id: number
+  seller_id: number
+  commodity: string
+  tonnage: number
+  price_per_unit: number
+  total_value: number
+  stage: string
+  ncnda_signed_date: string | null
+  kyc_approved_date: string | null
+  imfpa_signed_date: string | null
+  spa_signed_date: string | null
+  expected_commission: number
+  commission_received: number | null
+  notes: string
+  created_at: string
+}
+
+export default function DealsPage() {
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [selectedLOI, setSelectedLOI] = useState<{ dealId: number; text: string } | null>(null)
+  const [loiLoading, setLoiLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    commodity: '',
+    tonnage: 0,
+    price_per_unit: 0,
+    total_value: 0,
+    stage: 'inquiry',
+    expected_commission: 0,
+    notes: ''
+  })
+  const { user, session, signOut } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!session || user?.email !== 'deanbfox@gmail.com') {
+      router.push('/')
+      return
+    }
+    fetchDeals()
+  }, [user, session, router])
+
+  async function fetchDeals() {
+    try {
+      const token = session?.access_token
+      const res = await fetch('/api/crm/deals', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      setDeals(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const token = session?.access_token
+      const res = await fetch('/api/crm/deals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to create deal')
+      }
+
+      const newDeal = await res.json()
+      setDeals([newDeal, ...deals])
+      setFormData({
+        commodity: '',
+        tonnage: 0,
+        price_per_unit: 0,
+        total_value: 0,
+        stage: 'inquiry',
+        expected_commission: 0,
+        notes: ''
+      })
+      setShowForm(false)
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  async function generateLOI(dealId: number) {
+    setLoiLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-loi`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate LOI')
+        setLoiLoading(false)
+        return
+      }
+      setSelectedLOI({ dealId, text: data.loi_text })
+      setError('')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoiLoading(false)
+    }
+  }
+
+  function downloadLOI() {
+    if (!selectedLOI) return
+    const element = document.createElement('a')
+    const file = new Blob([selectedLOI.text], { type: 'text/plain' })
+    element.href = URL.createObjectURL(file)
+    element.download = `LOI-Deal-${selectedLOI.dealId}.txt`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+  }
+
+  const stageColor = (stage: string) => {
+    const colors: Record<string, string> = {
+      inquiry: '#f39c12',
+      loi_draft: '#e8a83c',
+      loi_sent: '#d9913d',
+      ncnda_signed: '#9b59b6',
+      kyc_approved: '#3498db',
+      imfpa_signed: '#e67e22',
+      spa_signed: '#27ae60',
+      closed_won: '#2ecc71',
+      closed_lost: '#e74c3c',
+      // Legacy support
+      ncnda: '#9b59b6',
+      kyc: '#3498db',
+      imfpa: '#e67e22',
+      spa: '#27ae60',
+      settlement: '#2ecc71'
+    }
+    return colors[stage] || '#95a5a6'
+  }
+
+  if (loading) {
+    return <div className="container"><p>Loading deals...</p></div>
+  }
+
+  return (
+    <div className="container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1>Deal Pipeline</h1>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{ padding: '8px 16px', background: '#27ae60', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+          >
+            {showForm ? 'Cancel' : '+ New Deal'}
+          </button>
+          <Link href="/crm" style={{ padding: '8px 16px', background: '#666', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+            Back
+          </Link>
+        </div>
+      </div>
+
+      {error && <div className="alert alert-error" style={{ marginBottom: '20px' }}>{error}</div>}
+
+      {showForm && (
+        <div className="card" style={{ marginBottom: '30px' }}>
+          <h2>Create New Deal</h2>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div>
+                <label>Commodity *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.commodity}
+                  onChange={(e) => setFormData({ ...formData, commodity: e.target.value })}
+                  placeholder="e.g., Iron Ore, Cobalt"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+              <div>
+                <label>Tonnage *</label>
+                <input
+                  type="number"
+                  required
+                  value={formData.tonnage}
+                  onChange={(e) => setFormData({ ...formData, tonnage: parseFloat(e.target.value) })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+              <div>
+                <label>Price per Unit (USD) *</label>
+                <input
+                  type="number"
+                  required
+                  value={formData.price_per_unit}
+                  onChange={(e) => setFormData({ ...formData, price_per_unit: parseFloat(e.target.value) })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+              <div>
+                <label>Total Value (USD) *</label>
+                <input
+                  type="number"
+                  required
+                  value={formData.total_value}
+                  onChange={(e) => setFormData({ ...formData, total_value: parseFloat(e.target.value) })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+              <div>
+                <label>Stage *</label>
+                <select
+                  value={formData.stage}
+                  onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                >
+                  <option value="inquiry">Inquiry</option>
+                  <option value="loi_draft">LOI Draft</option>
+                  <option value="loi_sent">LOI Sent</option>
+                  <option value="ncnda_signed">NCNDA Signed</option>
+                  <option value="kyc_approved">KYC Approved</option>
+                  <option value="imfpa_signed">IMFPA Signed</option>
+                  <option value="spa_signed">SPA Signed</option>
+                  <option value="closed_won">Closed Won</option>
+                  <option value="closed_lost">Closed Lost</option>
+                </select>
+              </div>
+              <div>
+                <label>Expected Commission (USD)</label>
+                <input
+                  type="number"
+                  value={formData.expected_commission}
+                  onChange={(e) => setFormData({ ...formData, expected_commission: parseFloat(e.target.value) })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '15px' }}>
+              <label>Notes</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Any additional details..."
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '80px' }}
+              />
+            </div>
+            <button
+              type="submit"
+              style={{ marginTop: '15px', padding: '10px 20px', background: '#27ae60', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              Create Deal
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div className="card">
+        <h2>Active Deals ({deals.length})</h2>
+        {deals.length === 0 ? (
+          <p style={{ color: '#666' }}>No deals yet. Create your first deal above.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #ccc' }}>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Commodity</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Tonnage</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Value (USD)</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Stage</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Commission</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Created</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deals.map((deal) => (
+                  <tr key={deal.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '10px' }}>{deal.commodity}</td>
+                    <td style={{ padding: '10px' }}>{deal.tonnage.toLocaleString()}</td>
+                    <td style={{ padding: '10px' }}>${deal.total_value?.toLocaleString()}</td>
+                    <td style={{ padding: '10px' }}>
+                      <span style={{ background: stageColor(deal.stage), color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                        {deal.stage.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px', fontWeight: 'bold' }}>${deal.expected_commission?.toLocaleString()}</td>
+                    <td style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
+                      {new Date(deal.created_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <button
+                        onClick={() => generateLOI(deal.id)}
+                        disabled={loiLoading}
+                        style={{
+                          padding: '4px 8px',
+                          background: '#3498db',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: loiLoading ? 'not-allowed' : 'pointer',
+                          fontSize: '12px',
+                          opacity: loiLoading ? 0.6 : 1
+                        }}
+                      >
+                        {loiLoading ? 'Generating...' : 'LOI'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {selectedLOI && (
+        <div className="card" style={{ marginTop: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2>Generated LOI - Deal {selectedLOI.dealId}</h2>
+            <button
+              onClick={() => setSelectedLOI(null)}
+              style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+          <pre style={{ background: '#f5f5f5', padding: '15px', borderRadius: '4px', overflowX: 'auto', whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.5' }}>
+            {selectedLOI.text}
+          </pre>
+          <button
+            onClick={downloadLOI}
+            style={{
+              marginTop: '10px',
+              padding: '10px 16px',
+              background: '#27ae60',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Download .txt
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

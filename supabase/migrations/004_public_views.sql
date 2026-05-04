@@ -1,0 +1,9 @@
+-- No-op migration.
+--
+-- The app now accesses CRM data through protected Next.js API routes.
+-- Do not create public views over dean_crm tables: that can expose private CRM
+-- data through the Supabase public REST API.
+--
+-- Supabase project settings still need these server-side API prerequisites:
+-- 1. Expose pentracore_knowledge and dean_crm in Supabase Dashboard -> Settings -> API -> Exposed schemas.
+-- 2. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY as a server-only environment variable.
