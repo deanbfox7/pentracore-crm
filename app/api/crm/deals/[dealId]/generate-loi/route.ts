@@ -62,9 +62,30 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     const loiText = generateProfessionalLOI(deal, buyer, seller)
 
+    const { data: document, error: insertError } = await supabaseAdmin
+      .schema('dean_crm')
+      .from('deal_documents')
+      .insert({
+        deal_id: deal.id,
+        document_type: 'loi',
+        content: loiText,
+        status: 'draft',
+        generated_at: new Date().toISOString()
+      })
+      .select('id')
+      .single()
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: `Failed to save document: ${insertError.message}` },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       {
         deal_id: deal.id,
+        document_id: document?.id,
         commodity: deal.commodity,
         loi_text: loiText,
         generated_at: new Date().toISOString()
