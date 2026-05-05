@@ -81,6 +81,13 @@
 - **Download saved document** as .txt
   - Uses saved content from database
 
+- **Download saved document** as PDF
+  - Red "Download PDF" button in document viewer
+  - Uses html2pdf.js with dynamic client-side import (no server processing)
+  - Includes PentraCore International header, document type, generated date, content, footer
+  - Professional A4 formatting with 10mm margins
+  - File naming: {DOC_TYPE}-{DATE}.pdf (e.g., LOI-2026-05-05.pdf)
+
 ---
 
 ## Important Routes
@@ -136,10 +143,12 @@
 
 ```
 Latest commits (as of 2026-05-05):
+- 9e46fd7 Add PDF export for saved documents (html2pdf.js, dynamic import)
+- [Completed] Fix PDF crash (dynamic client-side import, async)
 - f858b8e Add NCNDA generator (NCNDA endpoint + UI button)
-- [Status update] Add document status workflow (PATCH endpoint + Send/Sign buttons)
-- [Status update] Update CURRENT_STATE.md (documentation)
-- [Status update] Cleanup: production safety, document limit, state management
+- [Completed] Add document status workflow (PATCH endpoint + Send/Sign buttons)
+- [Completed] Update CURRENT_STATE.md (documentation)
+- [Completed] Cleanup: production safety, document limit, state management
 - Add working LOI generator for CRM deals
 - Save generated LOIs to deal documents
 - Show saved LOI history in deals UI
@@ -151,7 +160,8 @@ Completed in this session:
 - ✅ Working LOI generator with professional text
 - ✅ Save LOIs to dean_crm.deal_documents with content
 - ✅ Saved LOI history visible in UI (max 10, sorted by date)
-- ✅ View and download saved documents
+- ✅ View and download saved documents (.txt and PDF)
+- ✅ PDF export with PentraCore branding (html2pdf.js, client-side)
 - ✅ Document status workflow (draft → sent → signed)
 - ✅ NCNDA generator with 8-section professional agreement
 - ✅ NCNDA button on deals page (purple, reuses document workflow)
@@ -163,11 +173,11 @@ Completed in this session:
 ## Current Limitations
 
 ### Document Generation
-- Plain text output only (no PDF export yet)
+- Plain text + PDF export supported (html2pdf.js, client-side, A4 formatting with PentraCore branding)
 - Only LOI and NCNDA generators implemented (KYC/IMFPA/SPA not yet)
 - Buyer/seller names use placeholders if counterparties not created
 - No document versioning (each generation creates new record, not overwrite)
-- No custom document templates or branding
+- No custom document templates (terms are hardcoded in functions)
 
 ### Database & Schema
 - Document types constrained to: loi, ncnda, kyc, imfpa, spa, other
@@ -191,22 +201,7 @@ Completed in this session:
 
 ## Recommended Next Features
 
-### Option 1: PDF Export for Saved Documents
-**Scope:**
-- Add "Download PDF" button alongside existing .txt download
-- Use html2pdf or similar library to convert document text → PDF
-- Preserve formatting and improve visual presentation
-- Optional: Add company header/footer with PentraCore branding
-
-**Why:** PDFs are more professional for sharing with external parties and archiving.
-
-**Effort:** ~45 min (library setup, PDF generation, button in UI)
-
-**Dependencies:** None (can work with existing plain text content)
-
----
-
-### Option 2: KYC Document Generator
+### Option 1: KYC Document Generator
 **Scope:**
 - Create `/api/crm/deals/[dealId]/generate-kyc` endpoint
 - Generate multi-section KYC form/questionnaire from deal data
@@ -222,7 +217,7 @@ Completed in this session:
 
 ---
 
-### Option 3: Document Templates with Company Branding
+### Option 2: Document Templates with Company Branding
 **Scope:**
 - Move hardcoded document text to template system (Supabase table or .ts files)
 - Add company header with logo, address, contact info
