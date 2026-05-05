@@ -12,3 +12,20 @@ Screenshots/
 *.png
 *.zip
 backup-old-home-git-ignore/
+
+# Local environment
+.env.local
+.env*.local
+
+# Deployment/tooling caches
+.vercel/
+.claude/plugins/cache/
+.codex/.tmp/
+.codex/vendor_imports/
+.gemini/antigravity/playground/
+
+# Generated/local helper folders
+data/
+docs/
+n8n/
+scripts/
