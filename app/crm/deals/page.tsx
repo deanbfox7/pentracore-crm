@@ -38,8 +38,9 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [selectedLOI, setSelectedLOI] = useState<{ dealId: number; text: string } | null>(null)
+  const [selectedLOI, setSelectedLOI] = useState<{ dealId: number; text: string; type: string } | null>(null)
   const [loiLoading, setLoiLoading] = useState(false)
+  const [ncndaLoading, setNcndaLoading] = useState(false)
   const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([])
   const [viewingDocument, setViewingDocument] = useState<{ id: number; content: string; type: string } | null>(null)
   const [formData, setFormData] = useState({
@@ -139,13 +140,37 @@ export default function DealsPage() {
         setLoiLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.loi_text })
+      setSelectedLOI({ dealId, text: data.loi_text, type: 'LOI' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoiLoading(false)
+    }
+  }
+
+  async function generateNCNDA(dealId: number) {
+    setNcndaLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-ncnda`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate NCNDA')
+        setNcndaLoading(false)
+        return
+      }
+      setSelectedLOI({ dealId, text: data.ncnda_text, type: 'NCNDA' })
+      setError('')
+      await fetchSavedDocuments(dealId)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setNcndaLoading(false)
     }
   }
 
@@ -388,8 +413,9 @@ export default function DealsPage() {
                     <td style={{ padding: '10px' }}>
                       <button
                         onClick={() => generateLOI(deal.id)}
-                        disabled={loiLoading}
+                        disabled={loiLoading || ncndaLoading}
                         style={{
+                          marginRight: '4px',
                           padding: '4px 8px',
                           background: '#3498db',
                           color: 'white',
@@ -400,7 +426,23 @@ export default function DealsPage() {
                           opacity: loiLoading ? 0.6 : 1
                         }}
                       >
-                        {loiLoading ? 'Generating...' : 'LOI'}
+                        {loiLoading ? 'Gen...' : 'LOI'}
+                      </button>
+                      <button
+                        onClick={() => generateNCNDA(deal.id)}
+                        disabled={ncndaLoading || loiLoading}
+                        style={{
+                          padding: '4px 8px',
+                          background: '#9b59b6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: ncndaLoading ? 'not-allowed' : 'pointer',
+                          fontSize: '12px',
+                          opacity: ncndaLoading ? 0.6 : 1
+                        }}
+                      >
+                        {ncndaLoading ? 'Gen...' : 'NCNDA'}
                       </button>
                     </td>
                   </tr>
@@ -414,7 +456,7 @@ export default function DealsPage() {
       {selectedLOI && (
         <div className="card" style={{ marginTop: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h2>Generated LOI - Deal {selectedLOI.dealId}</h2>
+            <h2>Generated {selectedLOI.type} - Deal {selectedLOI.dealId}</h2>
             <button
               onClick={() => {
                 setSelectedLOI(null)
