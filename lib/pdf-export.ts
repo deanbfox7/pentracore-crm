@@ -122,7 +122,7 @@ export async function exportDocumentAsPDF(
   `
 
   const opt = {
-    margin: [12, 10, 12, 10],
+    margin: [12, 10, 12, 10] as [number, number, number, number],
     filename: `${docType}-${today}.pdf`,
     image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },

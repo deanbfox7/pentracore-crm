@@ -46,6 +46,7 @@ export default function DealsPage() {
   const [kycLoading, setKycLoading] = useState(false)
   const [imfpaLoading, setImfpaLoading] = useState(false)
   const [spaLoading, setSpaLoading] = useState(false)
+  const [fcoMarkedDeals, setFcoMarkedDeals] = useState<Set<number>>(new Set())
   const [formData, setFormData] = useState({
     commodity: '',
     tonnage: 0,
@@ -249,7 +250,7 @@ export default function DealsPage() {
     }
   }
 
-  function calculateDealReadiness(savedDocuments: SavedDocument[]) {
+  function calculateDealReadiness(savedDocuments: SavedDocument[], fcoMarked: boolean = false) {
     const documentTypes = new Set(savedDocuments.map(d => d.document_type))
 
     const completed = savedDocuments.map(d => ({
@@ -266,8 +267,10 @@ export default function DealsPage() {
     const latestSPA = savedDocuments.find(d => d.document_type === 'spa')
     const spaSigned = latestSPA?.status === 'signed'
 
-    // FCO is always pending (external, placeholder only)
-    missing.push('FCO (Full Corporate Offer - from seller)')
+    // FCO is external, can be marked as received/reviewed
+    if (!fcoMarked) {
+      missing.push('FCO (Full Corporate Offer - from seller)')
+    }
 
     let readinessStatus = 'Not started'
 
@@ -275,11 +278,15 @@ export default function DealsPage() {
       missing.push('LOI (request/offer document)')
       nextActions.push('Generate LOI/request')
       readinessStatus = 'Not started - Generate LOI/request'
-    } else if (!hasSPA) {
+    } else if (!fcoMarked && !hasSPA) {
       nextActions.push('Follow up with seller for FCO')
       nextActions.push('Once FCO received, prepare SPA')
       missing.push('SPA (final binding agreement)')
       readinessStatus = 'LOI/request stage - Follow up for FCO from seller'
+    } else if (fcoMarked && !hasSPA) {
+      nextActions.push('Prepare SPA')
+      missing.push('SPA (final binding agreement)')
+      readinessStatus = 'FCO received - Prepare SPA'
     } else if (hasSPA && !spaSigned) {
       nextActions.push('SPA prepared, awaiting approval/signature')
       readinessStatus = 'SPA prepared - Awaiting approval/signature'
@@ -759,7 +766,9 @@ export default function DealsPage() {
           <h3 style={{ marginBottom: '15px', color: '#2c3e50' }}>Deal Readiness Checklist</h3>
 
           {(() => {
-            const readiness = calculateDealReadiness(savedDocuments)
+            const dealId = selectedLOI.dealId
+            const fcoMarked = fcoMarkedDeals.has(dealId)
+            const readiness = calculateDealReadiness(savedDocuments, fcoMarked)
 
             return (
               <div>
@@ -783,6 +792,47 @@ export default function DealsPage() {
                       No documents yet
                     </div>
                   )}
+                </div>
+
+                {/* FCO Status Section */}
+                <div style={{ marginBottom: '20px', padding: '12px', background: '#fff9e6', borderLeft: '4px solid #f39c12', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '8px' }}>
+                    FCO STATUS
+                  </div>
+                  {fcoMarked ? (
+                    <div style={{ fontSize: '12px', color: '#27ae60', marginBottom: '8px' }}>
+                      ✅ FCO received and reviewed
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '12px', color: '#e74c3c', marginBottom: '8px' }}>
+                      ⏳ Awaiting FCO from seller (Full Corporate Offer)
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      const newSet = new Set(fcoMarkedDeals)
+                      if (fcoMarked) {
+                        newSet.delete(dealId)
+                      } else {
+                        newSet.add(dealId)
+                      }
+                      setFcoMarkedDeals(newSet)
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '11px',
+                      background: fcoMarked ? '#e74c3c' : '#f39c12',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {fcoMarked ? 'Mark as Pending' : 'Mark FCO Received'}
+                  </button>
+                  <div style={{ fontSize: '10px', color: '#999', marginTop: '8px', fontStyle: 'italic' }}>
+                    Temporary local marker — not saved to database
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>

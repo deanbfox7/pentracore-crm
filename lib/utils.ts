@@ -42,33 +42,42 @@ export const formatDateTime = (date: string | Date): string => {
 // Deal stage helpers
 export const stageOrder: Record<DealStage, number> = {
   inquiry: 1,
-  ncnda: 2,
-  kyc: 3,
-  imfpa: 4,
-  spa: 5,
-  settlement: 6,
+  loi_draft: 2,
+  loi_sent: 3,
+  ncnda_signed: 4,
+  kyc_approved: 5,
+  imfpa_signed: 6,
+  spa_signed: 7,
+  closed_won: 8,
+  closed_lost: 8,
 }
 
 export const stageLabel: Record<DealStage, string> = {
   inquiry: 'Inquiry',
-  ncnda: 'NCNDA',
-  kyc: 'KYC',
-  imfpa: 'IMFPA',
-  spa: 'SPA',
-  settlement: 'Settlement',
+  loi_draft: 'LOI Draft',
+  loi_sent: 'LOI Sent',
+  ncnda_signed: 'NCNDA Signed',
+  kyc_approved: 'KYC Approved',
+  imfpa_signed: 'IMFPA Signed',
+  spa_signed: 'SPA Signed',
+  closed_won: 'Closed Won',
+  closed_lost: 'Closed Lost',
 }
 
 export const stageColor: Record<DealStage, string> = {
   inquiry: '#f39c12',
-  ncnda: '#9b59b6',
-  kyc: '#3498db',
-  imfpa: '#e67e22',
-  spa: '#27ae60',
-  settlement: '#2ecc71',
+  loi_draft: '#e8a83c',
+  loi_sent: '#d9913d',
+  ncnda_signed: '#9b59b6',
+  kyc_approved: '#3498db',
+  imfpa_signed: '#e67e22',
+  spa_signed: '#27ae60',
+  closed_won: '#2ecc71',
+  closed_lost: '#e74c3c',
 }
 
 export const getNextStage = (current: DealStage): DealStage | null => {
-  const stages: DealStage[] = ['inquiry', 'ncnda', 'kyc', 'imfpa', 'spa', 'settlement']
+  const stages: DealStage[] = ['inquiry', 'loi_draft', 'loi_sent', 'ncnda_signed', 'kyc_approved', 'imfpa_signed', 'spa_signed', 'closed_won']
   const currentIndex = stages.indexOf(current)
   return currentIndex < stages.length - 1 ? stages[currentIndex + 1] : null
 }
