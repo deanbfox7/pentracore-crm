@@ -26,6 +26,14 @@ interface Deal {
   created_at: string
 }
 
+interface SavedDocument {
+  id: number
+  document_type: string
+  status: string
+  generated_at: string
+  created_at: string
+}
+
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,6 +41,8 @@ export default function DealsPage() {
   const [showForm, setShowForm] = useState(false)
   const [selectedLOI, setSelectedLOI] = useState<{ dealId: number; text: string } | null>(null)
   const [loiLoading, setLoiLoading] = useState(false)
+  const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([])
+  const [viewingDocument, setViewingDocument] = useState<{ id: number; content: string; type: string } | null>(null)
   const [formData, setFormData] = useState({
     commodity: '',
     tonnage: 0,
@@ -103,6 +113,19 @@ export default function DealsPage() {
     }
   }
 
+  async function fetchSavedDocuments(dealId: number) {
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/documents`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      setSavedDocuments(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      console.error('Failed to fetch documents:', err.message)
+    }
+  }
+
   async function generateLOI(dealId: number) {
     setLoiLoading(true)
     try {
@@ -119,11 +142,40 @@ export default function DealsPage() {
       }
       setSelectedLOI({ dealId, text: data.loi_text })
       setError('')
+      await fetchSavedDocuments(dealId)
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoiLoading(false)
     }
+  }
+
+  async function viewSavedDocument(documentId: number) {
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/documents/${documentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to load document')
+        return
+      }
+      setViewingDocument({ id: documentId, content: data.content, type: data.document_type })
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  function downloadSavedDocument() {
+    if (!viewingDocument) return
+    const element = document.createElement('a')
+    const file = new Blob([viewingDocument.content], { type: 'text/plain' })
+    element.href = URL.createObjectURL(file)
+    element.download = `${viewingDocument.type.toUpperCase()}-${new Date().toISOString().split('T')[0]}.txt`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
   }
 
   function downloadLOI() {
@@ -365,6 +417,88 @@ export default function DealsPage() {
             }}
           >
             Download .txt
+          </button>
+        </div>
+      )}
+
+      {savedDocuments.length > 0 && (
+        <div className="card" style={{ marginTop: '30px' }}>
+          <h2>Saved Documents - Deal {selectedLOI?.dealId}</h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #ccc' }}>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Type</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Status</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Generated</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedDocuments.map((doc) => (
+                  <tr key={doc.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '10px', fontWeight: 'bold' }}>{doc.document_type.toUpperCase()}</td>
+                    <td style={{ padding: '10px' }}>
+                      <span style={{ background: doc.status === 'draft' ? '#f39c12' : '#27ae60', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                        {doc.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
+                      {new Date(doc.generated_at).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <button
+                        onClick={() => viewSavedDocument(doc.id)}
+                        style={{
+                          marginRight: '8px',
+                          padding: '4px 8px',
+                          background: '#3498db',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {viewingDocument && (
+        <div className="card" style={{ marginTop: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2>Saved {viewingDocument.type.toUpperCase()} Document</h2>
+            <button
+              onClick={() => setViewingDocument(null)}
+              style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+          <pre style={{ background: '#f5f5f5', padding: '15px', borderRadius: '4px', overflowX: 'auto', whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.5' }}>
+            {viewingDocument.content}
+          </pre>
+          <button
+            onClick={downloadSavedDocument}
+            style={{
+              marginTop: '10px',
+              padding: '10px 16px',
+              background: '#27ae60',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Download saved .txt
           </button>
         </div>
       )}

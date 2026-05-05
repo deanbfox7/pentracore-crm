@@ -9,6 +9,28 @@ type RouteContext = {
   }
 }
 
+export async function GET(req: NextRequest, { params }: RouteContext) {
+  try {
+    await verifyDeanRequest(req)
+
+    const { data, error } = await supabaseAdmin
+      .schema('dean_crm')
+      .from('deal_documents')
+      .select('id, document_type, status, generated_at, created_at')
+      .eq('deal_id', params.dealId)
+      .order('generated_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json(data || [])
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message },
+      { status: err.message?.includes('Forbidden') ? 403 : 401 }
+    )
+  }
+}
+
 const GENERATABLE_TYPES: DealDocumentType[] = ['loi', 'ncnda', 'kyc']
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
