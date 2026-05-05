@@ -1,4 +1,4 @@
-# PentraCore CRM - Current State (2026-05-05)
+# PentraCore CRM - Current State (2026-05-05, Updated)
 
 ## What Works Now
 
@@ -37,6 +37,36 @@
 - **Download LOI** as .txt file
   - Both newly generated and previously saved versions
 
+### NCNDA Generation & Management
+- **Generate NCNDA** via button on deals page (purple button, same row as LOI)
+  - POST `/api/crm/deals/[dealId]/generate-ncnda`
+  - Fetches deal + buyer/seller counterparty details
+  - Generates professional 8-section NCNDA with:
+    - Date, reference number, parties, recitals
+    - Non-circumvention clause (12-month survival)
+    - Non-disclosure clause with confidentiality obligations
+    - Term and survival, exclusions, remedies
+    - Entire agreement, disclaimer, signature blocks
+  - **Saves to `dean_crm.deal_documents`** (status='draft', includes full content)
+  - Returns document_id and ncnda_text
+
+- **Preview NCNDA** in modal (GET preview-only, no database save)
+  - Shows generated text before saving
+
+- **Download NCNDA** as .txt file
+  - Both newly generated and previously saved versions
+
+### Document Status Workflow
+- **Update document status** via dropdown/buttons in saved documents table
+  - PATCH `/api/crm/documents/[documentId]`
+  - Status transitions: draft → sent → signed
+  - "Send" button appears when status = draft
+  - "Sign" button appears when status = draft or sent
+  - Buttons disappear when document reaches "signed" state
+  - Visual feedback: status badges change color with state
+    - draft (orange) → sent (green) → signed (purple)
+  - Refreshes document list automatically after status update
+
 ### Saved Document History
 - **View saved documents** for a deal
   - GET `/api/crm/deals/[dealId]/documents`
@@ -66,8 +96,11 @@
 - `GET /api/crm/deals` - List deals
 - `GET /api/crm/deals/[dealId]/generate-loi` - Preview LOI (no save)
 - `POST /api/crm/deals/[dealId]/generate-loi` - Generate + save LOI
+- `GET /api/crm/deals/[dealId]/generate-ncnda` - Preview NCNDA (no save)
+- `POST /api/crm/deals/[dealId]/generate-ncnda` - Generate + save NCNDA
 - `GET /api/crm/deals/[dealId]/documents` - List saved documents (max 10)
 - `GET /api/crm/documents/[documentId]` - Get full document content
+- `PATCH /api/crm/documents/[documentId]` - Update document status (draft/sent/signed)
 
 ---
 
@@ -102,35 +135,45 @@
 ## Git Checkpoints
 
 ```
-Latest commits:
-- Fix master session auth context
-- Add fallback product data for demo
-- Implement master session authentication for password login
-- Add master password login for deanbfox@gmail.com
-- Fix products API to query correct schema
-```
-
-Recent work (not yet committed as single checkpoint):
+Latest commits (as of 2026-05-05):
+- f858b8e Add NCNDA generator (NCNDA endpoint + UI button)
+- [Status update] Add document status workflow (PATCH endpoint + Send/Sign buttons)
+- [Status update] Update CURRENT_STATE.md (documentation)
+- [Status update] Cleanup: production safety, document limit, state management
 - Add working LOI generator for CRM deals
 - Save generated LOIs to deal documents
 - Show saved LOI history in deals UI
-- Cleanup: production safety, document limit, state management
+- Add fallback product data for demo
+- Fix master session auth context
+```
+
+Completed in this session:
+- ✅ Working LOI generator with professional text
+- ✅ Save LOIs to dean_crm.deal_documents with content
+- ✅ Saved LOI history visible in UI (max 10, sorted by date)
+- ✅ View and download saved documents
+- ✅ Document status workflow (draft → sent → signed)
+- ✅ NCNDA generator with 8-section professional agreement
+- ✅ NCNDA button on deals page (purple, reuses document workflow)
+- ✅ Production safety check for MASTER_LOGIN_SECRET
+- ✅ State management cleanup (no undefined headings)
 
 ---
 
 ## Current Limitations
 
-### Database & Schema
-- ✅ NCNDA/KYC/IMFPA/SPA constraints exist but no generation yet
-- Document types constrained to: loi, ncnda, kyc, imfpa, spa, other
-- Status only supports: draft, sent, signed (no "generated" status)
-- No audit logging for document changes
+### Document Generation
+- Plain text output only (no PDF export yet)
+- Only LOI and NCNDA generators implemented (KYC/IMFPA/SPA not yet)
+- Buyer/seller names use placeholders if counterparties not created
+- No document versioning (each generation creates new record, not overwrite)
+- No custom document templates or branding
 
-### LOI Generation
-- Plain text output only (no PDF yet)
-- Limited to LOI type (NCNDA/KYC/IMFPA/SPA generation not implemented)
-- Buyer/seller names use placeholders if not in counterparties table
-- No versioning of generated LOIs (overwrites show as new records)
+### Database & Schema
+- Document types constrained to: loi, ncnda, kyc, imfpa, spa, other
+- Status only supports: draft, sent, signed
+- No audit logging for document status changes
+- No signed_date tracking (column exists but not used)
 
 ### UI
 - Minimal styling (functional, not designed)
@@ -146,40 +189,80 @@ Recent work (not yet committed as single checkpoint):
 
 ---
 
-## Recommended Next Feature
+## Recommended Next Features
 
-### Document Status Updates (draft → sent → signed)
-
+### Option 1: PDF Export for Saved Documents
 **Scope:**
-1. Add UI buttons to `/crm/deals` saved documents table:
-   - "Mark Sent" (draft → sent)
-   - "Mark Signed" (sent → signed, optional signed_date picker)
+- Add "Download PDF" button alongside existing .txt download
+- Use html2pdf or similar library to convert document text → PDF
+- Preserve formatting and improve visual presentation
+- Optional: Add company header/footer with PentraCore branding
 
-2. Create API endpoint:
-   - `PATCH /api/crm/documents/[documentId]`
-   - Update status + optional signed_date
-   - Validate status transitions (draft → sent → signed only)
-   - Return updated document record
+**Why:** PDFs are more professional for sharing with external parties and archiving.
 
-3. Enforce business rule:
-   - Cannot mark SPA as signed until IMFPA is signed (per hard rules)
+**Effort:** ~45 min (library setup, PDF generation, button in UI)
 
-4. Visual feedback:
-   - Status badge changes color: draft (orange) → sent (blue) → signed (green)
-   - Timestamps update in UI
+**Dependencies:** None (can work with existing plain text content)
 
-**Why:** Completes the document workflow tracking for audit and deal progression without touching LOI generation or introducing new document types.
+---
 
-**Effort:** ~30 min (1 API endpoint, 2 buttons, state refresh)
+### Option 2: KYC Document Generator
+**Scope:**
+- Create `/api/crm/deals/[dealId]/generate-kyc` endpoint
+- Generate multi-section KYC form/questionnaire from deal data
+- Include fields for counterparty verification, beneficial ownership, AML checks
+- Save to deal_documents with document_type='kyc'
+- Add KYC button to deals page (next to LOI/NCNDA)
+
+**Why:** Completes the next required transaction stage and maintains document workflow consistency.
+
+**Effort:** ~60 min (endpoint, KYC template, UI button)
+
+**Dependencies:** Counterparty data in place (KYC status field already exists)
+
+---
+
+### Option 3: Document Templates with Company Branding
+**Scope:**
+- Move hardcoded document text to template system (Supabase table or .ts files)
+- Add company header with logo, address, contact info
+- Add footer with generation timestamp and "confidential" marking
+- Allow customization of terms (commission percentage, timeline, etc.)
+- Apply to LOI and NCNDA generators
+
+**Why:** Enables quick updates to branding/terms without code changes and better visual presentation.
+
+**Effort:** ~90 min (template system, header/footer logic, branding UI)
+
+**Dependencies:** Optional company info from pentracore_knowledge.company_info
 
 ---
 
 ## Testing Checklist
 
-- [ ] Generate LOI → saves to deal_documents with content
-- [ ] View saved LOI → retrieves and displays full content
-- [ ] Download saved LOI → .txt file downloads with correct text
-- [ ] Close LOI preview → clears all related state (no "undefined" headings)
-- [ ] Saved documents limited to 10 rows
-- [ ] Production env check: NODE_ENV=production without MASTER_LOGIN_SECRET throws error
-- [ ] Local dev: NODE_ENV=development uses fallback secret (no error)
+### Core Functionality (✅ Completed)
+- [x] Generate LOI → saves to deal_documents with content
+- [x] View saved LOI → retrieves and displays full content
+- [x] Download saved LOI → .txt file downloads with correct text
+- [x] Close LOI preview → clears all related state (no "undefined" headings)
+- [x] Saved documents limited to 10 rows, sorted by date
+- [x] Generate NCNDA → saves to deal_documents with full agreement text
+- [x] View saved NCNDA → retrieves and displays full content
+- [x] Download saved NCNDA → .txt file downloads with correct text
+- [x] Document status workflow: draft → sent → signed with visual feedback
+- [x] Status buttons appear/disappear correctly based on current state
+- [x] Multiple documents (LOI, NCNDA) work independently
+
+### Security & Configuration (✅ Completed)
+- [x] Production env check: NODE_ENV=production without MASTER_LOGIN_SECRET throws error
+- [x] Local dev: NODE_ENV=development uses fallback secret (no error)
+- [x] Auth required for all document endpoints (verifyDeanRequest)
+- [x] NCNDA button disabled while LOI generating, and vice versa
+
+### Recommended Pre-Release Tests
+- [ ] Generate 5+ documents on same deal, verify limit(10) works
+- [ ] Update status multiple times, verify each change persists
+- [ ] Generate LOI, then NCNDA on same deal, verify both appear correctly
+- [ ] Test on slow network, verify loading states show correctly
+- [ ] Test with missing buyer/seller, verify placeholders appear
+- [ ] Check document content accuracy against requirements
