@@ -38,6 +38,29 @@
 - **Download KYC** as .txt file
   - Both newly generated and previously saved versions
 
+### IMFPA Generation & Management
+- **Generate IMFPA** via button on deals page (red button, same row as LOI/NCNDA/KYC)
+  - POST `/api/crm/deals/[dealId]/generate-imfpa`
+  - Fetches deal + buyer/seller counterparty details
+  - Generates professional 10-section IMFPA with:
+    - Transaction overview (commodity, quantity, pricing, value)
+    - Commission and facilitator fee structure
+    - Non-circumvention acknowledgement (24-month survival)
+    - Payment terms and triggers (LC, B/L, CoA, KYC compliance)
+    - Confidentiality obligations (3-year survival)
+    - Representations and warranties (buyer/seller/broker)
+    - Governing law and arbitration
+    - Termination conditions and survival clauses
+    - Signature blocks for all parties
+  - **Saves to `dean_crm.deal_documents`** (status='draft', includes full content)
+  - Returns document_id in response
+
+- **Preview IMFPA** in modal (GET preview-only, no database save)
+  - Shows generated agreement before saving
+
+- **Download IMFPA** as .txt file
+  - Both newly generated and previously saved versions
+
 ### LOI Generation & Management
 - **Generate LOI** via button on deals page
   - POST `/api/crm/deals/[dealId]/generate-loi`
@@ -127,6 +150,8 @@
 - `POST /api/crm/deals/[dealId]/generate-ncnda` - Generate + save NCNDA
 - `GET /api/crm/deals/[dealId]/generate-kyc` - Preview KYC (no save)
 - `POST /api/crm/deals/[dealId]/generate-kyc` - Generate + save KYC
+- `GET /api/crm/deals/[dealId]/generate-imfpa` - Preview IMFPA (no save)
+- `POST /api/crm/deals/[dealId]/generate-imfpa` - Generate + save IMFPA
 - `GET /api/crm/deals/[dealId]/documents` - List saved documents (max 10)
 - `GET /api/crm/documents/[documentId]` - Get full document content
 - `PATCH /api/crm/documents/[documentId]` - Update document status (draft/sent/signed)
@@ -189,6 +214,8 @@ Completed in this session:
 - ✅ NCNDA button on deals page (purple, reuses document workflow)
 - ✅ KYC generator with verification checklist and compliance sign-off
 - ✅ KYC button on deals page (green, reuses document workflow)
+- ✅ IMFPA generator with 10-section master purchase agreement
+- ✅ IMFPA button on deals page (red, reuses document workflow)
 - ✅ Production safety check for MASTER_LOGIN_SECRET
 - ✅ State management cleanup (no undefined headings)
 - ✅ Future major feature vision documented (Document Compiler)
@@ -199,7 +226,7 @@ Completed in this session:
 
 ### Document Generation
 - Plain text + PDF export supported (html2pdf.js, client-side, A4 formatting with PentraCore branding)
-- LOI, NCNDA, and KYC generators implemented (IMFPA/SPA not yet)
+- LOI, NCNDA, KYC, and IMFPA generators implemented (SPA not yet)
 - Buyer/seller names use placeholders if counterparties not created
 - No document versioning (each generation creates new record, not overwrite)
 - No custom document templates (terms are hardcoded in functions)
@@ -226,17 +253,33 @@ Completed in this session:
 
 ## Recommended Next Features
 
-### Option 1: Document Templates with Company Branding
+### Option 1: SPA Document Generator
+**Scope:**
+- Create `/api/crm/deals/[dealId]/generate-spa` endpoint
+- Generate multi-section Sales Purchase Agreement from deal data
+- Include commodity specs, pricing, payment terms, delivery terms, warranties, dispute resolution
+- Save to deal_documents with document_type='spa'
+- Add SPA button to deals page (next to LOI/NCNDA/KYC/IMFPA)
+
+**Why:** Completes the transaction document suite (NCNDA → KYC → IMFPA → SPA). SPA is the final binding contract before payment/delivery.
+
+**Effort:** ~90 min (endpoint, SPA template, UI button)
+
+**Dependencies:** All prior documents (LOI, NCNDA, KYC, IMFPA) generated and reviewed
+
+---
+
+### Option 2: Document Templates with Company Branding
 **Scope:**
 - Move hardcoded document text to template system (Supabase table or .ts files)
 - Add company header with logo, address, contact info
 - Add footer with generation timestamp and "confidential" marking
 - Allow customization of terms (commission percentage, timeline, etc.)
-- Apply to LOI and NCNDA generators
+- Apply to LOI, NCNDA, KYC, IMFPA generators
 
 **Why:** Enables quick updates to branding/terms without code changes and better visual presentation.
 
-**Effort:** ~90 min (template system, header/footer logic, branding UI)
+**Effort:** ~120 min (template system, header/footer logic, branding UI)
 
 **Dependencies:** Optional company info from pentracore_knowledge.company_info
 
@@ -256,9 +299,12 @@ Completed in this session:
 - [x] Generate KYC → saves to deal_documents with full checklist text
 - [x] View saved KYC → retrieves and displays full content
 - [x] Download saved KYC → .txt file downloads with correct text
+- [x] Generate IMFPA → saves to deal_documents with full agreement text
+- [x] View saved IMFPA → retrieves and displays full content
+- [x] Download saved IMFPA → .txt file downloads with correct text
 - [x] Document status workflow: draft → sent → signed with visual feedback
 - [x] Status buttons appear/disappear correctly based on current state
-- [x] Multiple documents (LOI, NCNDA, KYC) work independently
+- [x] Multiple documents (LOI, NCNDA, KYC, IMFPA) work independently
 
 ### Security & Configuration (✅ Completed)
 - [x] Production env check: NODE_ENV=production without MASTER_LOGIN_SECRET throws error
@@ -269,9 +315,10 @@ Completed in this session:
 ### Recommended Pre-Release Tests
 - [ ] Generate 5+ documents on same deal, verify limit(10) works
 - [ ] Update status multiple times, verify each change persists
-- [ ] Generate LOI, then NCNDA, then KYC on same deal, verify all appear correctly
+- [ ] Generate LOI, NCNDA, KYC, then IMFPA on same deal, verify all appear correctly
 - [ ] Test on slow network, verify loading states show correctly
 - [ ] Test with missing buyer/seller, verify placeholders appear
+- [ ] Verify IMFPA includes commission, payment triggers, non-circumvention, and 10-section structure
 - [ ] Check document content accuracy against requirements
 
 ---

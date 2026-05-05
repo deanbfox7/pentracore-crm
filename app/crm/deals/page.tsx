@@ -44,6 +44,7 @@ export default function DealsPage() {
   const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([])
   const [viewingDocument, setViewingDocument] = useState<{ id: number; content: string; type: string } | null>(null)
   const [kycLoading, setKycLoading] = useState(false)
+  const [imfpaLoading, setImfpaLoading] = useState(false)
   const [formData, setFormData] = useState({
     commodity: '',
     tonnage: 0,
@@ -196,6 +197,30 @@ export default function DealsPage() {
       setError(err.message)
     } finally {
       setKycLoading(false)
+    }
+  }
+
+  async function generateIMFPA(dealId: number) {
+    setImfpaLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-imfpa`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate IMFPA')
+        setImfpaLoading(false)
+        return
+      }
+      setSelectedLOI({ dealId, text: data.imfpa_text, type: 'IMFPA' })
+      setError('')
+      await fetchSavedDocuments(dealId)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setImfpaLoading(false)
     }
   }
 
@@ -480,7 +505,7 @@ ${viewingDocument.content}
                     <td style={{ padding: '10px' }}>
                       <button
                         onClick={() => generateLOI(deal.id)}
-                        disabled={loiLoading || ncndaLoading || kycLoading}
+                        disabled={loiLoading || ncndaLoading || kycLoading || imfpaLoading}
                         style={{
                           marginRight: '4px',
                           padding: '4px 8px',
@@ -497,7 +522,7 @@ ${viewingDocument.content}
                       </button>
                       <button
                         onClick={() => generateNCNDA(deal.id)}
-                        disabled={ncndaLoading || loiLoading || kycLoading}
+                        disabled={ncndaLoading || loiLoading || kycLoading || imfpaLoading}
                         style={{
                           marginRight: '4px',
                           padding: '4px 8px',
@@ -514,8 +539,9 @@ ${viewingDocument.content}
                       </button>
                       <button
                         onClick={() => generateKYC(deal.id)}
-                        disabled={kycLoading || loiLoading || ncndaLoading}
+                        disabled={kycLoading || loiLoading || ncndaLoading || imfpaLoading}
                         style={{
+                          marginRight: '4px',
                           padding: '4px 8px',
                           background: '#27ae60',
                           color: 'white',
@@ -527,6 +553,22 @@ ${viewingDocument.content}
                         }}
                       >
                         {kycLoading ? 'Gen...' : 'KYC'}
+                      </button>
+                      <button
+                        onClick={() => generateIMFPA(deal.id)}
+                        disabled={imfpaLoading || loiLoading || ncndaLoading || kycLoading}
+                        style={{
+                          padding: '4px 8px',
+                          background: '#e74c3c',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: imfpaLoading ? 'not-allowed' : 'pointer',
+                          fontSize: '12px',
+                          opacity: imfpaLoading ? 0.6 : 1
+                        }}
+                      >
+                        {imfpaLoading ? 'Gen...' : 'IMFPA'}
                       </button>
                     </td>
                   </tr>
