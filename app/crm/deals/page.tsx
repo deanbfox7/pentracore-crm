@@ -38,7 +38,7 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [selectedLOI, setSelectedLOI] = useState<{ dealId: number; text: string; type: string } | null>(null)
+  const [selectedDocument, setSelectedDocument] = useState<{ dealId: number; text: string; type: string } | null>(null)
   const [loiLoading, setLoiLoading] = useState(false)
   const [ncndaLoading, setNcndaLoading] = useState(false)
   const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([])
@@ -144,7 +144,7 @@ export default function DealsPage() {
         setLoiLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.loi_text, type: 'LOI' })
+      setSelectedDocument({ dealId, text: data.loi_text, type: 'LOI' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
@@ -168,7 +168,7 @@ export default function DealsPage() {
         setNcndaLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.ncnda_text, type: 'NCNDA' })
+      setSelectedDocument({ dealId, text: data.ncnda_text, type: 'NCNDA' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
@@ -192,7 +192,7 @@ export default function DealsPage() {
         setKycLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.kyc_text, type: 'KYC' })
+      setSelectedDocument({ dealId, text: data.kyc_text, type: 'KYC' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
@@ -216,7 +216,7 @@ export default function DealsPage() {
         setImfpaLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.imfpa_text, type: 'IMFPA' })
+      setSelectedDocument({ dealId, text: data.imfpa_text, type: 'IMFPA' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
@@ -240,7 +240,7 @@ export default function DealsPage() {
         setSpaLoading(false)
         return
       }
-      setSelectedLOI({ dealId, text: data.spa_text, type: 'SPA' })
+      setSelectedDocument({ dealId, text: data.spa_text, type: 'SPA' })
       setError('')
       await fetchSavedDocuments(dealId)
     } catch (err: any) {
@@ -328,15 +328,19 @@ export default function DealsPage() {
   async function downloadDocumentAsPDF() {
     if (!viewingDocument) return
 
-    const { exportDocumentAsPDF } = await import('@/lib/pdf-export')
-    const today = new Date().toISOString().split('T')[0]
+    try {
+      const { exportDocumentAsPDF } = await import('@/lib/pdf-export')
+      const today = new Date().toISOString().split('T')[0]
 
-    await exportDocumentAsPDF(
-      viewingDocument.content,
-      viewingDocument.type,
-      today,
-      selectedLOI?.dealId
-    )
+      await exportDocumentAsPDF(
+        viewingDocument.content,
+        viewingDocument.type,
+        today,
+        selectedDocument?.dealId
+      )
+    } catch (err: any) {
+      setError(`Failed to generate PDF: ${err.message}`)
+    }
   }
 
   async function updateDocumentStatus(documentId: number, newStatus: string) {
@@ -355,7 +359,7 @@ export default function DealsPage() {
         setError(data.error || 'Failed to update document status')
         return
       }
-      await fetchSavedDocuments(selectedLOI?.dealId || 0)
+      await fetchSavedDocuments(selectedDocument?.dealId || 0)
       setError('')
     } catch (err: any) {
       setError(err.message)
@@ -363,11 +367,11 @@ export default function DealsPage() {
   }
 
   function downloadLOI() {
-    if (!selectedLOI) return
+    if (!selectedDocument) return
     const element = document.createElement('a')
-    const file = new Blob([selectedLOI.text], { type: 'text/plain' })
+    const file = new Blob([selectedDocument.text], { type: 'text/plain' })
     element.href = URL.createObjectURL(file)
-    element.download = `LOI-Deal-${selectedLOI.dealId}.txt`
+    element.download = `LOI-Deal-${selectedDocument.dealId}.txt`
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
@@ -642,13 +646,13 @@ export default function DealsPage() {
         )}
       </div>
 
-      {selectedLOI && (
+      {selectedDocument && (
         <div className="card" style={{ marginTop: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h2>Generated {selectedLOI.type} - Deal {selectedLOI.dealId}</h2>
+            <h2>Generated {selectedDocument.type} - Deal {selectedDocument.dealId}</h2>
             <button
               onClick={() => {
-                setSelectedLOI(null)
+                setSelectedDocument(null)
                 setSavedDocuments([])
                 setViewingDocument(null)
               }}
@@ -658,7 +662,7 @@ export default function DealsPage() {
             </button>
           </div>
           <pre style={{ background: '#f5f5f5', padding: '15px', borderRadius: '4px', overflowX: 'auto', whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.5' }}>
-            {selectedLOI.text}
+            {selectedDocument.text}
           </pre>
           <button
             onClick={downloadLOI}
@@ -678,9 +682,9 @@ export default function DealsPage() {
         </div>
       )}
 
-      {selectedLOI && savedDocuments.length > 0 && (
+      {selectedDocument && savedDocuments.length > 0 && (
         <div className="card" style={{ marginTop: '30px' }}>
-          <h2>Saved Documents - Deal {selectedLOI.dealId}</h2>
+          <h2>Saved Documents - Deal {selectedDocument.dealId}</h2>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
@@ -761,12 +765,12 @@ export default function DealsPage() {
         </div>
       )}
 
-      {selectedLOI && savedDocuments.length > 0 && (
+      {selectedDocument && savedDocuments.length > 0 && (
         <div className="card" style={{ marginTop: '20px', background: '#f8f9fa' }}>
           <h3 style={{ marginBottom: '15px', color: '#2c3e50' }}>Deal Readiness Checklist</h3>
 
           {(() => {
-            const dealId = selectedLOI.dealId
+            const dealId = selectedDocument.dealId
             const fcoMarked = fcoMarkedDeals.has(dealId)
             const readiness = calculateDealReadiness(savedDocuments, fcoMarked)
 
