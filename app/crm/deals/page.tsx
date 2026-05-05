@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
 
 interface Deal {
   id: number
@@ -394,7 +393,11 @@ export default function DealsPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h2>Generated LOI - Deal {selectedLOI.dealId}</h2>
             <button
-              onClick={() => setSelectedLOI(null)}
+              onClick={() => {
+                setSelectedLOI(null)
+                setSavedDocuments([])
+                setViewingDocument(null)
+              }}
               style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
             >
               Close
@@ -421,9 +424,9 @@ export default function DealsPage() {
         </div>
       )}
 
-      {savedDocuments.length > 0 && (
+      {selectedLOI && savedDocuments.length > 0 && (
         <div className="card" style={{ marginTop: '30px' }}>
-          <h2>Saved Documents - Deal {selectedLOI?.dealId}</h2>
+          <h2>Saved Documents - Deal {selectedLOI.dealId}</h2>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>

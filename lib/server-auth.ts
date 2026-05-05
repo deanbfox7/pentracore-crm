@@ -3,7 +3,16 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
 const MASTER_EMAIL = 'deanbfox@gmail.com'
-const MASTER_SECRET = process.env.MASTER_LOGIN_SECRET || 'pentracore-master-secret-key'
+
+function getMasterSecret(): string {
+  const secret = process.env.MASTER_LOGIN_SECRET
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('MASTER_LOGIN_SECRET environment variable is required in production')
+  }
+  return secret || 'pentracore-master-secret-key'
+}
+
+const MASTER_SECRET = getMasterSecret()
 const MASTER_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
 type MasterSession = {

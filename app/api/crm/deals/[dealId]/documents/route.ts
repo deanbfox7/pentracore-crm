@@ -19,6 +19,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       .select('id, document_type, status, generated_at, created_at')
       .eq('deal_id', params.dealId)
       .order('generated_at', { ascending: false })
+      .limit(10)
 
     if (error) throw error
 
