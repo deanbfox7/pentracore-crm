@@ -152,8 +152,13 @@
 - **Download saved document** as PDF
   - Red "Download PDF" button in document viewer
   - Uses html2pdf.js with dynamic client-side import (no server processing)
-  - Includes PentraCore International header, document type, generated date, content, footer
-  - Professional A4 formatting with 10mm margins
+  - Branded PDF export via shared `lib/pdf-export.ts` utility
+  - Professional header with PentraCore International branding and company tagline
+  - Confidential notice banner
+  - Document metadata section (type, deal reference, generated date)
+  - Document content in monospace font for readability
+  - Professional footer with confidential/proprietary notice
+  - A4 formatting with 12mm top/bottom, 10mm left/right margins
   - File naming: {DOC_TYPE}-{DATE}.pdf (e.g., LOI-2026-05-05.pdf)
 
 ---
@@ -182,6 +187,24 @@
 - `GET /api/crm/deals/[dealId]/documents` - List saved documents (max 10)
 - `GET /api/crm/documents/[documentId]` - Get full document content
 - `PATCH /api/crm/documents/[documentId]` - Update document status (draft/sent/signed)
+
+---
+
+## Shared Utilities
+
+### PDF Export (`lib/pdf-export.ts`)
+- Reusable branded PDF export function for all document types
+- Parameters: documentContent, documentType, generatedDate, dealId (optional)
+- Features:
+  - Professional PentraCore header and company tagline
+  - Confidential notice banner
+  - Document metadata section (type, reference, date)
+  - Monospace font for document content readability
+  - Professional footer with confidentiality notice
+  - HTML escaping to prevent rendering issues
+  - Client-side generation with html2pdf.js dynamic import
+  - Consistent A4 formatting across all documents
+- Used by: `app/crm/deals/page.tsx` downloadDocumentAsPDF()
 
 ---
 
@@ -245,10 +268,12 @@ Completed in this session:
 - ✅ IMFPA button on deals page (red, reuses document workflow)
 - ✅ SPA generator with 14-section sales and purchase agreement
 - ✅ SPA button on deals page (orange, reuses document workflow)
+- ✅ Branded PDF export utility (lib/pdf-export.ts) with professional presentation
 - ✅ Production safety check for MASTER_LOGIN_SECRET
 - ✅ State management cleanup (no undefined headings)
 - ✅ Future major feature vision documented (Document Compiler)
 - ✅ Complete transaction document suite: NCNDA → KYC → IMFPA → SPA
+- ✅ Professional PDF presentation across all document types
 
 ---
 
