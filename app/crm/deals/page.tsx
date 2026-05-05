@@ -249,6 +249,47 @@ export default function DealsPage() {
     }
   }
 
+  function calculateDealReadiness(savedDocuments: SavedDocument[]) {
+    const documentTypes = new Set(savedDocuments.map(d => d.document_type))
+
+    const completed = savedDocuments.map(d => ({
+      type: d.document_type.toUpperCase(),
+      status: d.status,
+      date: new Date(d.generated_at).toLocaleDateString()
+    }))
+
+    const missing: string[] = []
+    const nextActions: string[] = []
+
+    const hasLOI = documentTypes.has('loi')
+    const hasSPA = documentTypes.has('spa')
+    const latestSPA = savedDocuments.find(d => d.document_type === 'spa')
+    const spaSigned = latestSPA?.status === 'signed'
+
+    // FCO is always pending (external, placeholder only)
+    missing.push('FCO (Full Corporate Offer - from seller)')
+
+    let readinessStatus = 'Not started'
+
+    if (!hasLOI) {
+      missing.push('LOI (request/offer document)')
+      nextActions.push('Generate LOI/request')
+      readinessStatus = 'Not started - Generate LOI/request'
+    } else if (!hasSPA) {
+      nextActions.push('Follow up with seller for FCO')
+      nextActions.push('Once FCO received, prepare SPA')
+      missing.push('SPA (final binding agreement)')
+      readinessStatus = 'LOI/request stage - Follow up for FCO from seller'
+    } else if (hasSPA && !spaSigned) {
+      nextActions.push('SPA prepared, awaiting approval/signature')
+      readinessStatus = 'SPA prepared - Awaiting approval/signature'
+    } else if (spaSigned) {
+      readinessStatus = 'Deal documents complete - All signed'
+    }
+
+    return { completed, missing, nextActions, readinessStatus }
+  }
+
   async function viewSavedDocument(documentId: number) {
     try {
       const token = session?.access_token
@@ -710,6 +751,77 @@ export default function DealsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {selectedLOI && savedDocuments.length > 0 && (
+        <div className="card" style={{ marginTop: '20px', background: '#f8f9fa' }}>
+          <h3 style={{ marginBottom: '15px', color: '#2c3e50' }}>Deal Readiness Checklist</h3>
+
+          {(() => {
+            const readiness = calculateDealReadiness(savedDocuments)
+
+            return (
+              <div>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '10px' }}>
+                    COMPLETED DOCUMENTS
+                  </div>
+                  {readiness.completed.length > 0 ? (
+                    <div style={{ marginLeft: '15px' }}>
+                      {readiness.completed.map((doc, idx) => (
+                        <div key={idx} style={{ fontSize: '12px', marginBottom: '6px', color: '#333' }}>
+                          ✅ {doc.type}
+                          <span style={{ color: '#666', marginLeft: '10px' }}>
+                            ({doc.status}, {doc.date})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ marginLeft: '15px', fontSize: '12px', color: '#999' }}>
+                      No documents yet
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '10px' }}>
+                    AWAITING
+                  </div>
+                  <div style={{ marginLeft: '15px' }}>
+                    {readiness.missing.map((item, idx) => (
+                      <div key={idx} style={{ fontSize: '12px', marginBottom: '6px', color: '#e74c3c' }}>
+                        ⏳ {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '10px' }}>
+                    NEXT ACTIONS
+                  </div>
+                  <div style={{ marginLeft: '15px' }}>
+                    {readiness.nextActions.map((action, idx) => (
+                      <div key={idx} style={{ fontSize: '12px', marginBottom: '6px', color: '#3498db' }}>
+                        → {action}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ padding: '12px', background: '#e8f4f8', borderLeft: '4px solid #3498db', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2c3e50' }}>
+                    🚀 Readiness Status
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#333', marginTop: '5px' }}>
+                    {readiness.readinessStatus}
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
 
