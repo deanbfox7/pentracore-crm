@@ -18,6 +18,26 @@
   - Display: commodity, tonnage, total value, stage, commission, created date
   - Stage tracking: inquiry → loi_draft → loi_sent → ncnda_signed → kyc_approved → imfpa_signed → spa_signed → closed_won/lost
 
+### KYC Generation & Management
+- **Generate KYC** via button on deals page (green button, same row as LOI/NCNDA)
+  - POST `/api/crm/deals/[dealId]/generate-kyc`
+  - Fetches deal + buyer/seller counterparty details
+  - Generates professional KYC checklist with:
+    - Transaction details (commodity, tonnage, value)
+    - Buyer/seller verification checklists (corporate docs, IDs, addresses)
+    - Beneficial ownership verification (UBO identification)
+    - AML screening items (OFAC, UN/EU sanctions, PEP checks)
+    - Source of funds verification
+    - Compliance sign-off section
+  - **Saves to `dean_crm.deal_documents`** (status='draft', includes full content)
+  - Returns document_id in response
+
+- **Preview KYC** in modal (GET preview-only, no database save)
+  - Shows generated checklist before saving
+
+- **Download KYC** as .txt file
+  - Both newly generated and previously saved versions
+
 ### LOI Generation & Management
 - **Generate LOI** via button on deals page
   - POST `/api/crm/deals/[dealId]/generate-loi`
@@ -105,6 +125,8 @@
 - `POST /api/crm/deals/[dealId]/generate-loi` - Generate + save LOI
 - `GET /api/crm/deals/[dealId]/generate-ncnda` - Preview NCNDA (no save)
 - `POST /api/crm/deals/[dealId]/generate-ncnda` - Generate + save NCNDA
+- `GET /api/crm/deals/[dealId]/generate-kyc` - Preview KYC (no save)
+- `POST /api/crm/deals/[dealId]/generate-kyc` - Generate + save KYC
 - `GET /api/crm/deals/[dealId]/documents` - List saved documents (max 10)
 - `GET /api/crm/documents/[documentId]` - Get full document content
 - `PATCH /api/crm/documents/[documentId]` - Update document status (draft/sent/signed)
@@ -165,8 +187,11 @@ Completed in this session:
 - ✅ Document status workflow (draft → sent → signed)
 - ✅ NCNDA generator with 8-section professional agreement
 - ✅ NCNDA button on deals page (purple, reuses document workflow)
+- ✅ KYC generator with verification checklist and compliance sign-off
+- ✅ KYC button on deals page (green, reuses document workflow)
 - ✅ Production safety check for MASTER_LOGIN_SECRET
 - ✅ State management cleanup (no undefined headings)
+- ✅ Future major feature vision documented (Document Compiler)
 
 ---
 
@@ -174,7 +199,7 @@ Completed in this session:
 
 ### Document Generation
 - Plain text + PDF export supported (html2pdf.js, client-side, A4 formatting with PentraCore branding)
-- Only LOI and NCNDA generators implemented (KYC/IMFPA/SPA not yet)
+- LOI, NCNDA, and KYC generators implemented (IMFPA/SPA not yet)
 - Buyer/seller names use placeholders if counterparties not created
 - No document versioning (each generation creates new record, not overwrite)
 - No custom document templates (terms are hardcoded in functions)
@@ -201,23 +226,7 @@ Completed in this session:
 
 ## Recommended Next Features
 
-### Option 1: KYC Document Generator
-**Scope:**
-- Create `/api/crm/deals/[dealId]/generate-kyc` endpoint
-- Generate multi-section KYC form/questionnaire from deal data
-- Include fields for counterparty verification, beneficial ownership, AML checks
-- Save to deal_documents with document_type='kyc'
-- Add KYC button to deals page (next to LOI/NCNDA)
-
-**Why:** Completes the next required transaction stage and maintains document workflow consistency.
-
-**Effort:** ~60 min (endpoint, KYC template, UI button)
-
-**Dependencies:** Counterparty data in place (KYC status field already exists)
-
----
-
-### Option 2: Document Templates with Company Branding
+### Option 1: Document Templates with Company Branding
 **Scope:**
 - Move hardcoded document text to template system (Supabase table or .ts files)
 - Add company header with logo, address, contact info
@@ -244,9 +253,12 @@ Completed in this session:
 - [x] Generate NCNDA → saves to deal_documents with full agreement text
 - [x] View saved NCNDA → retrieves and displays full content
 - [x] Download saved NCNDA → .txt file downloads with correct text
+- [x] Generate KYC → saves to deal_documents with full checklist text
+- [x] View saved KYC → retrieves and displays full content
+- [x] Download saved KYC → .txt file downloads with correct text
 - [x] Document status workflow: draft → sent → signed with visual feedback
 - [x] Status buttons appear/disappear correctly based on current state
-- [x] Multiple documents (LOI, NCNDA) work independently
+- [x] Multiple documents (LOI, NCNDA, KYC) work independently
 
 ### Security & Configuration (✅ Completed)
 - [x] Production env check: NODE_ENV=production without MASTER_LOGIN_SECRET throws error
@@ -257,7 +269,29 @@ Completed in this session:
 ### Recommended Pre-Release Tests
 - [ ] Generate 5+ documents on same deal, verify limit(10) works
 - [ ] Update status multiple times, verify each change persists
-- [ ] Generate LOI, then NCNDA on same deal, verify both appear correctly
+- [ ] Generate LOI, then NCNDA, then KYC on same deal, verify all appear correctly
 - [ ] Test on slow network, verify loading states show correctly
 - [ ] Test with missing buyer/seller, verify placeholders appear
 - [ ] Check document content accuracy against requirements
+
+---
+
+## Future Major Feature: PentraCore Document Compiler (Planned)
+
+**Vision:**
+A document intelligence system that reads uploaded PentraCore documents (PDFs, Word, etc.) and extracts structured deal data back into the CRM.
+
+**Scope (not yet built):**
+- Accept uploaded deal documents
+- Extract commodity, buyer, seller, tonnage, pricing, commission, stage, constraints, logistics, payment terms, missing documents, risks
+- Match to existing CRM deals or suggest new deal records
+- Generate summaries: deal overview, shareholder update, CEO brief, missing-documents checklist
+- Feed extracted data to LOI/NCNDA/KYC/IMFPA/SPA generators
+- Review-first workflow: extracted data requires approval before saving
+
+**Important Design Constraints:**
+- Does NOT replace CRM as source of truth
+- All extracted data is review-first, never auto-saved blindly
+- Current generators (LOI, NCNDA, KYC, IMFPA, SPA) remain unchanged until Compiler is built
+- No extraction flags or approval workflow added to current schema yet
+- Compiler feeds clean, approved data INTO the CRM, not vice versa
