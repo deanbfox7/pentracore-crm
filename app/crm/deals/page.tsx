@@ -177,6 +177,29 @@ export default function DealsPage() {
     document.body.removeChild(element)
   }
 
+  async function updateDocumentStatus(documentId: number, newStatus: string) {
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/documents/${documentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to update document status')
+        return
+      }
+      await fetchSavedDocuments(selectedLOI?.dealId || 0)
+      setError('')
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
   function downloadLOI() {
     if (!selectedLOI) return
     const element = document.createElement('a')
@@ -449,22 +472,55 @@ export default function DealsPage() {
                     <td style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
                       {new Date(doc.generated_at).toLocaleString()}
                     </td>
-                    <td style={{ padding: '10px' }}>
+                    <td style={{ padding: '10px', fontSize: '12px' }}>
                       <button
                         onClick={() => viewSavedDocument(doc.id)}
                         style={{
-                          marginRight: '8px',
+                          marginRight: '4px',
                           padding: '4px 8px',
                           background: '#3498db',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          fontSize: '12px'
+                          fontSize: '11px'
                         }}
                       >
                         View
                       </button>
+                      {doc.status === 'draft' && (
+                        <button
+                          onClick={() => updateDocumentStatus(doc.id, 'sent')}
+                          style={{
+                            marginRight: '4px',
+                            padding: '4px 8px',
+                            background: '#27ae60',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '11px'
+                          }}
+                        >
+                          Send
+                        </button>
+                      )}
+                      {(doc.status === 'draft' || doc.status === 'sent') && (
+                        <button
+                          onClick={() => updateDocumentStatus(doc.id, 'signed')}
+                          style={{
+                            padding: '4px 8px',
+                            background: '#9b59b6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '11px'
+                          }}
+                        >
+                          Sign
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
