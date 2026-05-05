@@ -258,6 +258,7 @@
 
 ```
 Latest commits (as of 2026-05-05):
+- d38a441 Add deal readiness checklist
 - 9e46fd7 Add PDF export for saved documents (html2pdf.js, dynamic import)
 - [Completed] Fix PDF crash (dynamic client-side import, async)
 - f858b8e Add NCNDA generator (NCNDA endpoint + UI button)
@@ -326,9 +327,35 @@ Completed in this session:
 
 ---
 
+## Completed in Latest Session
+
+- ✅ Deal readiness / missing-documents checklist (shows completed docs, awaiting items, next actions, readiness status)
+- ✅ Implemented business logic: LOI → follow up for FCO → SPA ready
+- ✅ FCO shown as placeholder (external receipt/review, not system-generated)
+- ✅ No database schema changes needed
+- ✅ CEO-approved feature documented in CEO_FEEDBACK.md
+
+---
+
 ## Recommended Next Features
 
-### Option 1: Document Templates with Company Branding
+### Option 1: FCO Received / Document Review Marker
+**Scope:**
+- Add UI marker/button to indicate FCO received from seller
+- Allow Dean to mark deal as "FCO received and reviewed" (manual confirmation)
+- Update readiness checklist to show FCO status
+- Show timestamp of FCO reception
+- Link to optionally attach/reference external FCO document
+
+**Why:** Bridges gap between auto-generated documents (LOI, NCNDA, KYC, IMFPA) and external FCO receipt; clarifies deal readiness for SPA stage.
+
+**Effort:** ~45 min (UI marker + readiness logic update)
+
+**Dependencies:** None; purely UI + business logic
+
+---
+
+### Option 2: Document Templates with Company Branding
 **Scope:**
 - Move hardcoded document text to template system (Supabase table or .ts files)
 - Add company header with logo, address, contact info
@@ -344,7 +371,7 @@ Completed in this session:
 
 ---
 
-### Option 2: PentraCore Document Compiler (Future Major Feature)
+### Option 3: PentraCore Document Compiler (Future Major Feature)
 **Scope:**
 - Build document intelligence system for reading uploaded deal documents
 - Extract structured deal data: commodity, buyer, seller, tonnage, pricing, commission, stage, constraints, logistics, payment terms, missing documents, risks
