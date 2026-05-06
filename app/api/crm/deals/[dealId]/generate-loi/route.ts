@@ -120,7 +120,6 @@ function generateProfessionalLOI(deal: any, buyer: any, seller: any): string {
   const sellerName = seller?.name || '[SELLER NAME]'
   const commodity = deal.commodity || '[COMMODITY]'
   const tonnage = deal.tonnage || '[TONNAGE]'
-  const unit = 'MT' // metric tonnes
   const pricePerUnit = deal.price_per_unit ? formatCurrency(deal.price_per_unit) : '[PRICE PER UNIT]'
   const totalValue = deal.total_value ? formatCurrency(deal.total_value) : '[TOTAL VALUE]'
 
@@ -134,29 +133,56 @@ function generateProfessionalLOI(deal: any, buyer: any, seller: any): string {
   const dealNotes = deal.notes || 'None'
 
   return `LETTER OF INTENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Date: ${today}
-Reference Number: DEAL-${deal.id}
+DOCUMENT HEADER
 
+Date:               ${today}
+Reference Number:   DEAL-${deal.id}
+Prepared by:        PentraCore International
+Status:             DRAFT — INTERNAL REVIEW ONLY
+Confidentiality:    This document is confidential and proprietary.
+                    Not for external distribution without explicit approval.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PARTIES TO THE TRANSACTION
 
-Buyer:   ${buyerName}
-Seller:  ${sellerName}
-Broker:  PentraCore International
+Buyer:      ${buyerName}
+Seller:     ${sellerName}
+Broker:     PentraCore International
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-COMMODITY SPECIFICATIONS
+COMMODITY & TRANSACTION SUMMARY
 
-Commodity:       ${commodity}
-Quantity:        ${tonnage} ${unit}
-Price Per Unit:  ${pricePerUnit}
-Total Value:     ${totalValue}
+This Letter of Intent sets forth the preliminary terms for a transaction
+involving the sale and purchase of the commodity specified below. The
+parties express interest in moving forward subject to satisfactory
+completion of all verification, due diligence, and compliance requirements.
 
+Commodity:          ${commodity}
+Quantity:           ${tonnage} MT (Metric Tonnes)
+Indicative Price:   ${pricePerUnit}
+Estimated Value:    ${totalValue}
 
-TRANSACTION PROCESS AND COMPLIANCE STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The transaction will proceed through the following stages:
+INDICATIVE COMMERCIAL TERMS
+
+Price Per Unit:     ${pricePerUnit}
+Total Value:        ${totalValue}
+Expected Commission:${commission}
+Additional Notes:   ${dealNotes}
+
+All pricing is indicative and subject to final verification of commodity
+specifications, market conditions, and buyer/seller creditworthiness.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TRANSACTION PROCESS & COMPLIANCE STATUS
+
+All transactions follow PentraCore's standardized compliance framework:
 
 1. Non-Circumvention & Non-Disclosure Agreement (NCNDA)
    Status: ${ncndaStatus}
@@ -173,29 +199,74 @@ The transaction will proceed through the following stages:
 5. Payment & Delivery
    Status: ○ Pending
 
+Note: The IMFPA must be executed before the SPA. The KYC verification
+must be complete before IMFPA is signed.
 
-COMMERCIAL TERMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Expected Commission:  ${commission}
-Notes:               ${dealNotes}
+NEXT STEPS & TIMELINE
 
+Upon mutual agreement to proceed with this LOI:
 
-DECLARATION
+1. Both parties review and approve this LOI (INTERNAL)
+2. Buyer and Seller execute NCNDA (EXTERNAL)
+3. KYC verification commences
+4. Upon KYC approval, IMFPA is drafted and presented
+5. Upon IMFPA execution, SPA is prepared
+6. SPA execution and payment/delivery follow
 
-This Letter of Intent represents an expression of interest in principle and outlines the commercial framework for the proposed transaction. Execution of this LOI does not constitute a binding agreement. All terms are subject to:
+Following internal LOI approval, the next key external milestone is
+receipt/review of the Full Corporate Offer (FCO) from the seller,
+before SPA preparation.
 
-• Satisfactory completion of due diligence
-• Final verification of buyer and seller credentials
-• Execution of legally binding agreements (NCNDA, KYC approval, IMFPA, and SPA)
-• Compliance with applicable laws and regulations
-• Mutual agreement on all final terms and conditions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Each party reserves the right to withdraw from this transaction at any stage prior to execution of binding agreements.
+CONDITIONS & APPROVALS
 
+This LOI is contingent upon:
 
----
+✓ Satisfactory completion of due diligence on both buyer and seller
+✓ Verification of buyer creditworthiness and funds availability
+✓ Verification of seller commodity ownership and ability to deliver
+✓ Final confirmation of commodity specifications and quantity
+✓ Mutual agreement on all commercial terms
+✓ Compliance with applicable trade, customs, and regulatory requirements
+✓ Internal approval by PentraCore and both transacting parties
+
+Either party may withdraw from this transaction at any stage prior to
+execution of binding legal agreements.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONFIDENTIALITY & NON-BINDING DECLARATION
+
+This Letter of Intent is:
+  • NOT a binding legal contract
+  • An expression of preliminary interest and intent to negotiate
+  • Subject to execution of formal binding agreements
+  • CONFIDENTIAL — Intended only for the named parties and their advisors
+
+No obligation exists unless and until all parties execute binding agreements
+(NCNDA, IMFPA, SPA) as outlined in the Transaction Process section above.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠ HUMAN APPROVAL NOTICE
+
+This is a DRAFT document prepared by the PentraCore system.
+This document MUST be manually reviewed and approved before being
+shared with any external party (buyer or seller).
+
+DO NOT send this document externally without explicit written approval
+from PentraCore management.
+
+Once approved internally, this LOI will serve as the foundation for the
+NCNDA execution, which is the formal entry point to the transaction process.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 Generated by PentraCore International
-This document is confidential and intended only for the named parties.`
+${today}`
 }
 
 function formatCurrency(value: number): string {
