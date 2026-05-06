@@ -47,6 +47,9 @@ export default function DealsPage() {
   const [imfpaLoading, setImfpaLoading] = useState(false)
   const [spaLoading, setSpaLoading] = useState(false)
   const [fcoMarkedDeals, setFcoMarkedDeals] = useState<Set<number>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedStage, setSelectedStage] = useState('')
+  const [selectedCommodity, setSelectedCommodity] = useState('')
   const [formData, setFormData] = useState({
     commodity: '',
     tonnage: 0,
@@ -80,6 +83,21 @@ export default function DealsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function getFilteredDeals() {
+    return deals.filter(deal => {
+      const matchesSearch = searchTerm === '' ||
+        deal.commodity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (deal.notes || '').toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStage = selectedStage === '' || deal.stage === selectedStage
+      const matchesCommodity = selectedCommodity === '' || deal.commodity === selectedCommodity
+      return matchesSearch && matchesStage && matchesCommodity
+    })
+  }
+
+  function getUniqueCommodities() {
+    return Array.from(new Set(deals.map(d => d.commodity))).sort()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -518,8 +536,58 @@ export default function DealsPage() {
         </div>
       )}
 
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h2>Filter Deals</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+          <div>
+            <label>Search (Commodity/Notes)</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div>
+            <label>Stage</label>
+            <select
+              value={selectedStage}
+              onChange={(e) => setSelectedStage(e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+            >
+              <option value="">All Stages</option>
+              <option value="inquiry">Inquiry</option>
+              <option value="loi_draft">LOI Draft</option>
+              <option value="loi_sent">LOI Sent</option>
+              <option value="ncnda_signed">NCNDA Signed</option>
+              <option value="kyc_approved">KYC Approved</option>
+              <option value="imfpa_signed">IMFPA Signed</option>
+              <option value="spa_signed">SPA Signed</option>
+              <option value="closed_won">Closed Won</option>
+              <option value="closed_lost">Closed Lost</option>
+            </select>
+          </div>
+          <div>
+            <label>Commodity</label>
+            <select
+              value={selectedCommodity}
+              onChange={(e) => setSelectedCommodity(e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+            >
+              <option value="">All Commodities</option>
+              {getUniqueCommodities().map((commodity) => (
+                <option key={commodity} value={commodity}>
+                  {commodity}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="card">
-        <h2>Active Deals ({deals.length})</h2>
+        <h2>Active Deals ({getFilteredDeals().length})</h2>
         {deals.length === 0 ? (
           <p style={{ color: '#666' }}>No deals yet. Create your first deal above.</p>
         ) : (
@@ -537,8 +605,8 @@ export default function DealsPage() {
                 </tr>
               </thead>
               <tbody>
-                {deals.map((deal) => (
-                  <tr key={deal.id} style={{ borderBottom: '1px solid #eee' }}>
+                {getFilteredDeals().map((deal) => (
+                  <tr key={deal.id} style={{ borderBottom: '1px solid #eee', cursor: 'pointer' }} onClick={() => router.push(`/crm/deals/${deal.id}`)}>
                     <td style={{ padding: '10px' }}>{deal.commodity}</td>
                     <td style={{ padding: '10px' }}>{deal.tonnage.toLocaleString()}</td>
                     <td style={{ padding: '10px' }}>${deal.total_value?.toLocaleString()}</td>
