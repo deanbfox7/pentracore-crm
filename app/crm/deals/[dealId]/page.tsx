@@ -25,10 +25,25 @@ interface Deal {
   created_at: string
 }
 
+interface SavedDocument {
+  id: number
+  document_type: string
+  status: string
+  generated_at: string
+  created_at: string
+}
+
 export default function DealDetailPage() {
   const [deal, setDeal] = useState<Deal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [loiLoading, setLoiLoading] = useState(false)
+  const [ncndaLoading, setNcndaLoading] = useState(false)
+  const [kycLoading, setKycLoading] = useState(false)
+  const [imfpaLoading, setImfpaLoading] = useState(false)
+  const [spaLoading, setSpaLoading] = useState(false)
+  const [selectedDocument, setSelectedDocument] = useState<{ dealId: number; text: string; type: string } | null>(null)
+  const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([])
   const { user, session } = useAuth()
   const router = useRouter()
   const params = useParams()
@@ -58,6 +73,156 @@ export default function DealDetailPage() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function fetchSavedDocuments() {
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/documents`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      setSavedDocuments(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      console.error('Failed to fetch documents:', err.message)
+    }
+  }
+
+  async function generateLOI() {
+    setLoiLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-loi`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate LOI')
+        setLoiLoading(false)
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.loi_text, type: 'LOI' })
+      setError('')
+      await fetchSavedDocuments()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoiLoading(false)
+    }
+  }
+
+  async function generateNCNDA() {
+    setNcndaLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-ncnda`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate NCNDA')
+        setNcndaLoading(false)
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.ncnda_text, type: 'NCNDA' })
+      setError('')
+      await fetchSavedDocuments()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setNcndaLoading(false)
+    }
+  }
+
+  async function generateKYC() {
+    setKycLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-kyc`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate KYC')
+        setKycLoading(false)
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.kyc_text, type: 'KYC' })
+      setError('')
+      await fetchSavedDocuments()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setKycLoading(false)
+    }
+  }
+
+  async function generateIMFPA() {
+    setImfpaLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-imfpa`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate IMFPA')
+        setImfpaLoading(false)
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.imfpa_text, type: 'IMFPA' })
+      setError('')
+      await fetchSavedDocuments()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setImfpaLoading(false)
+    }
+  }
+
+  async function generateSPA() {
+    setSpaLoading(true)
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/deals/${dealId}/generate-spa`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to generate SPA')
+        setSpaLoading(false)
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.spa_text, type: 'SPA' })
+      setError('')
+      await fetchSavedDocuments()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSpaLoading(false)
+    }
+  }
+
+  async function viewSavedDocument(documentId: number) {
+    try {
+      const token = session?.access_token
+      const res = await fetch(`/api/crm/documents/${documentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to load document')
+        return
+      }
+      setSelectedDocument({ dealId: Number(dealId), text: data.content, type: data.document_type })
+    } catch (err: any) {
+      setError(err.message)
     }
   }
 
@@ -164,6 +329,79 @@ export default function DealDetailPage() {
         <div className="card" style={{ marginTop: '30px' }}>
           <h2>Notes</h2>
           <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{deal.notes}</p>
+        </div>
+      )}
+
+      <div className="card" style={{ marginTop: '30px' }}>
+        <h2>Generate Documents</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+          <button onClick={() => generateLOI()} disabled={loiLoading || ncndaLoading || kycLoading || imfpaLoading || spaLoading} style={{ padding: '10px 12px', background: '#3498db', color: 'white', border: 'none', borderRadius: '4px', cursor: loiLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 'bold', opacity: loiLoading ? 0.6 : 1 }}>
+            {loiLoading ? 'Generating...' : 'LOI'}
+          </button>
+          <button onClick={() => generateNCNDA()} disabled={ncndaLoading || loiLoading || kycLoading || imfpaLoading || spaLoading} style={{ padding: '10px 12px', background: '#9b59b6', color: 'white', border: 'none', borderRadius: '4px', cursor: ncndaLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 'bold', opacity: ncndaLoading ? 0.6 : 1 }}>
+            {ncndaLoading ? 'Generating...' : 'NCNDA'}
+          </button>
+          <button onClick={() => generateKYC()} disabled={kycLoading || loiLoading || ncndaLoading || imfpaLoading || spaLoading} style={{ padding: '10px 12px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '4px', cursor: kycLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 'bold', opacity: kycLoading ? 0.6 : 1 }}>
+            {kycLoading ? 'Generating...' : 'KYC'}
+          </button>
+          <button onClick={() => generateIMFPA()} disabled={imfpaLoading || loiLoading || ncndaLoading || kycLoading || spaLoading} style={{ padding: '10px 12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: imfpaLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 'bold', opacity: imfpaLoading ? 0.6 : 1 }}>
+            {imfpaLoading ? 'Generating...' : 'IMFPA'}
+          </button>
+          <button onClick={() => generateSPA()} disabled={spaLoading || loiLoading || ncndaLoading || kycLoading || imfpaLoading} style={{ padding: '10px 12px', background: '#f39c12', color: 'white', border: 'none', borderRadius: '4px', cursor: spaLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: 'bold', opacity: spaLoading ? 0.6 : 1 }}>
+            {spaLoading ? 'Generating...' : 'SPA'}
+          </button>
+        </div>
+      </div>
+
+      {selectedDocument && (
+        <div className="card" style={{ marginTop: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2>Generated {selectedDocument.type}</h2>
+            <button onClick={() => setSelectedDocument(null)} style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+              Close
+            </button>
+          </div>
+          <pre style={{ background: '#f5f5f5', padding: '15px', borderRadius: '4px', overflowX: 'auto', whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.5' }}>
+            {selectedDocument.text}
+          </pre>
+        </div>
+      )}
+
+      {savedDocuments.length > 0 && (
+        <div className="card" style={{ marginTop: '30px' }}>
+          <h2>Saved Documents</h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #ccc' }}>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Type</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Status</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Generated</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedDocuments.map((doc) => (
+                  <tr key={doc.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '10px', fontWeight: 'bold' }}>{doc.document_type.toUpperCase()}</td>
+                    <td style={{ padding: '10px' }}>
+                      <span style={{ background: doc.status === 'draft' ? '#f39c12' : '#27ae60', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                        {doc.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
+                      {new Date(doc.generated_at).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <button onClick={() => viewSavedDocument(doc.id)} style={{ padding: '4px 8px', background: '#3498db', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
