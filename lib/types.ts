@@ -139,6 +139,12 @@ export interface Deal {
   commission_received?: number
   commission_received_date?: string
   notes?: string
+  probability_percent?: number
+  owner?: string
+  risk_level?: string
+  current_bottleneck?: string
+  missing_documents?: string
+  next_action?: string
   created_at: string
   updated_at: string
 }

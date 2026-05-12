@@ -42,6 +42,16 @@ export async function POST(req: NextRequest) {
     const tonnage = Number(body.tonnage)
     const targetPrice = body.target_price === '' || body.target_price === null ? null : Number(body.target_price)
 
+    if (body.probability_percent !== undefined && body.probability_percent !== null) {
+      const probPercent = Number(body.probability_percent)
+      if (probPercent < 0 || probPercent > 100) {
+        return NextResponse.json(
+          { error: 'probability_percent must be between 0 and 100' },
+          { status: 400 }
+        )
+      }
+    }
+
     const deal = {
       deal_name: String(body.deal_name),
       commodity: String(body.commodity),
@@ -58,6 +68,12 @@ export async function POST(req: NextRequest) {
       stage: 'inquiry',
       verified: false,
       verification_notes: null,
+      probability_percent: body.probability_percent !== undefined && body.probability_percent !== null ? Number(body.probability_percent) : 0,
+      owner: body.owner ? String(body.owner) : null,
+      risk_level: body.risk_level ? String(body.risk_level) : 'Medium',
+      current_bottleneck: body.current_bottleneck ? String(body.current_bottleneck) : null,
+      missing_documents: body.missing_documents ? String(body.missing_documents) : null,
+      next_action: body.next_action ? String(body.next_action) : null,
     }
 
     const { data, error } = await supabaseAdmin
