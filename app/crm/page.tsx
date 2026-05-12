@@ -37,12 +37,11 @@ export default function CRMPage() {
       router.push('/')
       return
     }
-
-    if (user?.email !== 'deanbfox@gmail.com') {
-      router.push('/knowledge')
+    if (user && user.email !== 'deanbfox@gmail.com') {
+      setError(`CRM access blocked for email: ${user.email}`)
+      setLoading(false)
       return
     }
-
     fetchData()
   }, [user, session, router])
 
@@ -136,20 +135,20 @@ export default function CRMPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
         <Link
-          href="/crm"
+          href="/crm/deals"
           className="card"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
-          <h3>Leads ({leads.length})</h3>
-          <p style={{ color: '#666', fontSize: '13px' }}>Active prospects</p>
+          <h3>Deal Pipeline</h3>
+          <p style={{ color: '#666', fontSize: '13px' }}>Manage deals & generate documents</p>
         </Link>
         <Link
-          href="/crm"
+          href="/crm/whatsapp-intake"
           className="card"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
-          <h3>Opportunities ({opportunities.length})</h3>
-          <p style={{ color: '#666', fontSize: '13px' }}>Active deals in pipeline</p>
+          <h3>WhatsApp Intake</h3>
+          <p style={{ color: '#666', fontSize: '13px' }}>Extract deals from chat exports</p>
         </Link>
         <Link
           href="/crm/analytics"
