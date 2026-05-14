@@ -51,13 +51,15 @@ export default function DealsPage() {
   const [selectedStage, setSelectedStage] = useState('')
   const [selectedCommodity, setSelectedCommodity] = useState('')
   const [formData, setFormData] = useState({
+    deal_name: '',
     commodity: '',
     tonnage: 0,
-    price_per_unit: 0,
-    total_value: 0,
-    stage: 'inquiry',
-    expected_commission: 0,
-    notes: ''
+    counterparty_name: '',
+    counterparty_email: '',
+    intermediary_chain: '',
+    source: 'direct',
+    notes: '',
+    next_action: ''
   })
   const { user, session, signOut } = useAuth()
   const router = useRouter()
@@ -121,13 +123,15 @@ export default function DealsPage() {
       const newDeal = await res.json()
       setDeals([newDeal, ...deals])
       setFormData({
+        deal_name: '',
         commodity: '',
         tonnage: 0,
-        price_per_unit: 0,
-        total_value: 0,
-        stage: 'inquiry',
-        expected_commission: 0,
-        notes: ''
+        counterparty_name: '',
+        counterparty_email: '',
+        intermediary_chain: '',
+        source: 'direct',
+        notes: '',
+        next_action: ''
       })
       setShowForm(false)
     } catch (err: any) {
@@ -441,9 +445,20 @@ export default function DealsPage() {
 
       {showForm && (
         <div className="card" style={{ marginBottom: '30px' }}>
-          <h2>Create New Deal</h2>
+          <h2>Create New Deal (Hybrid Intake)</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div>
+                <label>Deal Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.deal_name}
+                  onChange={(e) => setFormData({ ...formData, deal_name: e.target.value })}
+                  placeholder="e.g., Coal RB3, Copper Cathode"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
               <div>
                 <label>Commodity *</label>
                 <input
@@ -467,55 +482,61 @@ export default function DealsPage() {
                 />
               </div>
               <div>
-                <label>Price per Unit (USD) *</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.price_per_unit}
-                  onChange={(e) => setFormData({ ...formData, price_per_unit: parseFloat(e.target.value) })}
-                  placeholder="0"
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label>Total Value (USD) *</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.total_value}
-                  onChange={(e) => setFormData({ ...formData, total_value: parseFloat(e.target.value) })}
-                  placeholder="0"
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label>Stage *</label>
+                <label>Source</label>
                 <select
-                  value={formData.stage}
-                  onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                  value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                 >
-                  <option value="inquiry">Inquiry</option>
-                  <option value="loi_draft">LOI Draft</option>
-                  <option value="loi_sent">LOI Sent</option>
-                  <option value="ncnda_signed">NCNDA Signed</option>
-                  <option value="kyc_approved">KYC Approved</option>
-                  <option value="imfpa_signed">IMFPA Signed</option>
-                  <option value="spa_signed">SPA Signed</option>
-                  <option value="closed_won">Closed Won</option>
-                  <option value="closed_lost">Closed Lost</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="referral">Referral</option>
+                  <option value="direct">Direct</option>
+                  <option value="spreadsheet">Spreadsheet</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
               <div>
-                <label>Expected Commission (USD)</label>
+                <label>Counterparty Name</label>
                 <input
-                  type="number"
-                  value={formData.expected_commission}
-                  onChange={(e) => setFormData({ ...formData, expected_commission: parseFloat(e.target.value) })}
-                  placeholder="0"
+                  type="text"
+                  value={formData.counterparty_name}
+                  onChange={(e) => setFormData({ ...formData, counterparty_name: e.target.value })}
+                  placeholder="e.g., Orathu, FGMS (optional)"
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                 />
               </div>
+              <div>
+                <label>Counterparty Email</label>
+                <input
+                  type="email"
+                  value={formData.counterparty_email}
+                  onChange={(e) => setFormData({ ...formData, counterparty_email: e.target.value })}
+                  placeholder="contact@example.com (optional)"
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '15px' }}>
+              <label>Intermediary Chain</label>
+              <input
+                type="text"
+                value={formData.intermediary_chain}
+                onChange={(e) => setFormData({ ...formData, intermediary_chain: e.target.value })}
+                placeholder="e.g., Alex → Renier → Crazy Monkeys 561 → Seller"
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: '15px' }}
+              />
+            </div>
+            <div style={{ marginTop: '15px' }}>
+              <label>Next Action</label>
+              <input
+                type="text"
+                value={formData.next_action}
+                onChange={(e) => setFormData({ ...formData, next_action: e.target.value })}
+                placeholder="e.g., Follow up with Alex, Request LOI, Send KYC"
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: '15px' }}
+              />
             </div>
             <div style={{ marginTop: '15px' }}>
               <label>Notes</label>

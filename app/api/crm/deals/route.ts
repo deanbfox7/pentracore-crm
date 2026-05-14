@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    if (!body.deal_name || !body.commodity || !body.tonnage || !body.counterparty_name || !body.counterparty_email) {
+    if (!body.deal_name || !body.commodity || !body.tonnage) {
       return NextResponse.json(
-        { error: 'Deal name, commodity, tonnage, counterparty name, and counterparty email are required' },
+        { error: 'Deal name, commodity, and tonnage are required' },
         { status: 400 }
       )
     }
@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const validSources = ['whatsapp', 'email', 'phone', 'referral', 'direct', 'spreadsheet', 'other']
+    const source = body.source && validSources.includes(body.source) ? body.source : 'direct'
+
     const deal = {
       deal_name: String(body.deal_name),
       commodity: String(body.commodity),
@@ -60,8 +63,10 @@ export async function POST(req: NextRequest) {
       target_price: targetPrice,
       price_per_unit: targetPrice,
       total_value: targetPrice === null ? null : tonnage * targetPrice,
-      counterparty_name: String(body.counterparty_name),
-      counterparty_email: String(body.counterparty_email),
+      counterparty_name: body.counterparty_name ? String(body.counterparty_name) : null,
+      counterparty_email: body.counterparty_email ? String(body.counterparty_email) : null,
+      intermediary_chain: body.intermediary_chain ? String(body.intermediary_chain) : null,
+      source,
       submitter_name: body.submitter_name ? String(body.submitter_name) : null,
       submitter_email: body.submitter_email ? String(body.submitter_email) : null,
       notes: body.notes ? String(body.notes) : null,

@@ -1,5 +1,5 @@
 export type DealDocumentType = 'loi' | 'ncnda' | 'kyc' | 'imfpa' | 'spa'
-export type DealDocumentStatus = 'draft' | 'sent' | 'signed'
+export type DealDocumentStatus = 'draft' | 'internal_review' | 'approved' | 'sent' | 'signed' | 'rejected'
 
 export interface IntakeDeal {
   id: number

@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const body = await req.json()
     const newStatus = body.status?.toLowerCase()
 
-    const validStatuses = ['draft', 'sent', 'signed']
+    const validStatuses = ['draft', 'internal_review', 'approved', 'sent', 'signed', 'rejected']
     if (!validStatuses.includes(newStatus)) {
       return NextResponse.json(
         { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },

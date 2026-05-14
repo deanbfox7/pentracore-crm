@@ -23,6 +23,12 @@ interface Deal {
   commission_received: number | null
   notes: string
   created_at: string
+  probability_percent?: number
+  owner?: string
+  risk_level?: string
+  current_bottleneck?: string
+  missing_documents?: string
+  next_action?: string
 }
 
 interface SavedDocument {
@@ -331,6 +337,52 @@ export default function DealDetailPage() {
           <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{deal.notes}</p>
         </div>
       )}
+
+      <div className="card" style={{ marginTop: '30px', background: '#f0f7ff', borderLeft: '4px solid #3498db' }}>
+        <h2 style={{ color: '#2c3e50' }}>Phase 2: Operational Visibility</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold' }}>Owner</p>
+            <p style={{ fontSize: '16px', color: deal.owner ? '#333' : '#999' }}>{deal.owner || '(unassigned)'}</p>
+          </div>
+          <div>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold' }}>Probability (%)</p>
+            <p style={{ fontSize: '16px', fontWeight: 'bold', color: deal.probability_percent ? '#27ae60' : '#999' }}>{deal.probability_percent ?? 0}%</p>
+          </div>
+          <div>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold' }}>Risk Level</p>
+            <p style={{ fontSize: '14px' }}>
+              <span style={{
+                background: deal.risk_level === 'High' ? '#e74c3c' : deal.risk_level === 'Medium' ? '#f39c12' : '#27ae60',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                display: 'inline-block'
+              }}>
+                {deal.risk_level || 'Medium'}
+              </span>
+            </p>
+          </div>
+          <div>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold' }}>Bottleneck</p>
+            <p style={{ fontSize: '14px', color: deal.current_bottleneck ? '#e74c3c' : '#999' }}>
+              {deal.current_bottleneck || '(none)'}
+            </p>
+          </div>
+        </div>
+        {deal.missing_documents && (
+          <div style={{ marginTop: '20px', padding: '12px', background: '#fff3cd', borderRadius: '4px', borderLeft: '4px solid #f39c12' }}>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Missing Documents</p>
+            <p style={{ fontSize: '14px', color: '#333' }}>{deal.missing_documents}</p>
+          </div>
+        )}
+        {deal.next_action && (
+          <div style={{ marginTop: '20px', padding: '12px', background: '#e8f4f8', borderRadius: '4px', borderLeft: '4px solid #3498db' }}>
+            <p style={{ color: '#666', fontSize: '12px', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Next Action</p>
+            <p style={{ fontSize: '14px', color: '#2c3e50' }}>→ {deal.next_action}</p>
+          </div>
+        )}
+      </div>
 
       <div className="card" style={{ marginTop: '30px' }}>
         <h2>Generate Documents</h2>

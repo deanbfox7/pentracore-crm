@@ -47,18 +47,11 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const { data: deal, error: dealError } = await supabaseAdmin
       .schema('dean_crm')
       .from('deals')
-      .select('*, deal_documents(*)')
+      .select('*')
       .eq('id', params.dealId)
       .single()
 
     if (dealError) throw dealError
-
-    const existingDocuments = Array.isArray(deal.deal_documents) ? deal.deal_documents : []
-    const hasNcnda = existingDocuments.some((document: any) => document.document_type === 'ncnda')
-
-    if (documentType === 'loi' && !hasNcnda) {
-      return NextResponse.json({ error: 'NCNDA must be generated before LOI' }, { status: 400 })
-    }
 
     const content = buildDealDocumentContent(documentType, deal)
 
