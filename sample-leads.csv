@@ -1,0 +1,16 @@
+first_name,last_name,email,phone,company_name,country,city,industry,company_size,linkedin_url,notes
+Wei,Zhang,w.zhang@baosteel.com,+86 21 5900 1234,Baosteel Group,China,Shanghai,Steel,enterprise,linkedin.com/in/weizhang,Largest steel producer in China. Interested in iron ore and coking coal.
+Rajesh,Kumar,r.kumar@jsw.in,+91 22 4286 1000,JSW Steel,India,Mumbai,Steel,enterprise,linkedin.com/in/rajeshkumar,Major Indian steel producer. Procures manganese and chrome ore.
+Ahmed,Al-Rashid,a.rashid@emiratessteel.ae,+971 2 418 0000,Emirates Steel,United Arab Emirates,Abu Dhabi,Steel,large,linkedin.com/in/ahmedalrashid,UAE state steel producer. Buys iron ore and scrap.
+Mehmet,Yilmaz,m.yilmaz@erdemir.com.tr,+90 372 316 0000,Erdemir Steel,Turkey,Istanbul,Steel,enterprise,linkedin.com/in/mehmetyilmaz,One of Turkey's largest steel producers. Needs iron ore and coal.
+Park,Jinhyuk,j.park@posco.com,+82 54 220 0114,POSCO,South Korea,Pohang,Steel,enterprise,linkedin.com/in/parkjinhyuk,Global steel giant. Major buyer of iron ore and coking coal from Africa.
+Kenji,Tanaka,k.tanaka@nippon-steel.com,+81 3 6867 4111,Nippon Steel,Japan,Tokyo,Steel,enterprise,linkedin.com/in/kenjitanaka,Japan's largest steelmaker. Procures manganese and iron ore.
+Hans,Mueller,h.mueller@thyssenkrupp.com,+49 201 844 0,ThyssenKrupp Steel,Germany,Essen,Steel,enterprise,linkedin.com/in/hansmueller,Major European steel group. Buys manganese ore and chrome.
+Priya,Sharma,p.sharma@hindalco.com,+91 22 6691 7000,Hindalco Industries,India,Mumbai,Mining & Metals,enterprise,linkedin.com/in/priyasharma,Indian metals giant. Interested in copper and bauxite.
+Carlos,Rodriguez,c.rodriguez@gerdau.com,+55 51 3323 2000,Gerdau,Brazil,Porto Alegre,Steel,enterprise,linkedin.com/in/carlosrodriguez,Largest steel producer in Latin America. Buys scrap and iron ore.
+Liu,Wei,l.wei@wisco.com.cn,+86 27 8568 1234,Wuhan Iron and Steel,China,Wuhan,Steel,enterprise,linkedin.com/in/liuwei,Major Chinese steelmaker. Procures iron ore and coking coal in large volumes.
+Anwar,Hassan,a.hassan@ezz.com.eg,+20 2 2480 4800,Ezz Steel,Egypt,Cairo,Steel,large,linkedin.com/in/anwarhassan,Egypt's largest steel producer. Needs iron ore and scrap.
+Viktor,Petrov,v.petrov@nlmk.com,+7 495 915 1717,NLMK Group,Russia,Moscow,Steel,enterprise,linkedin.com/in/viktorpetrov,Large Russian steel group. Buys iron ore and coal.
+Sanjay,Gupta,s.gupta@vedanta.com,+91 22 6646 1000,Vedanta Resources,India,Mumbai,Mining & Metals,enterprise,linkedin.com/in/sanjaygupta,Diversified metals company. Interested in zinc copper and cobalt.
+Mohammed,Al-Ghamdi,m.alghamdi@hadeed.com.sa,+966 13 341 0000,Hadeed (SABIC),Saudi Arabia,Al-Jubail,Steel,large,linkedin.com/in/mohammedalghamdi,Saudi steel producer. Procures iron ore and direct reduced iron.
+Yusuf,Okonkwo,y.okonkwo@dangote.com,+234 1 460 4000,Dangote Group,Nigeria,Lagos,Manufacturing,enterprise,linkedin.com/in/yusufokonkwo,Africa's largest conglomerate. Building massive steel plant needing iron ore.
